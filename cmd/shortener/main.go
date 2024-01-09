@@ -15,17 +15,21 @@ func urlHandler(res http.ResponseWriter, req *http.Request) {
 			res.Write([]byte(err.Error()))
 			return
 		}
-		shortUrl := req.Host + req.URL.Path + makeShortUrl(urlToShorten)
+
+		shortURL := req.Host + req.URL.Path + makeShortURL(urlToShorten)
+		if len(req.URL.Scheme) == 0 {
+			shortURL = "http://" + shortURL
+		}
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte(shortUrl))
+		res.Write([]byte(shortURL))
 	}
 	if req.Method == http.MethodGet {
-		shortUrl := req.URL.Path
-		location := dbMap[string(shortUrl[1:])]
+		shortURL := req.URL.Path
+		location := dbMap[string(shortURL[1:])]
 		res.Header().Set("Location", location)
-		http.Redirect(res, req, dbMap[string(shortUrl[1:])], http.StatusTemporaryRedirect)
+		http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
 	}
 }
 
@@ -41,19 +45,19 @@ func main() {
 	}
 }
 
-func makeShortUrl(longUrl []byte) string {
+func makeShortURL(longURL []byte) string {
 	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	shortUrlLength := 8
-	var newUrl []byte
+	shortURLLength := 8
+	var newURL []byte
 	for {
-		newUrl = make([]byte, shortUrlLength)
-		for i := 0; i < shortUrlLength; i++ {
-			newUrl[i] = letters[rand.Intn(len(letters))]
+		newURL = make([]byte, shortURLLength)
+		for i := 0; i < shortURLLength; i++ {
+			newURL[i] = letters[rand.Intn(len(letters))]
 		}
-		if _, ok := dbMap[string(newUrl)]; !ok {
+		if _, ok := dbMap[string(newURL)]; !ok {
 			break
 		}
 	}
-	dbMap[string(newUrl)] = string(longUrl)
-	return string(newUrl)
+	dbMap[string(newURL)] = string(longURL)
+	return string(newURL)
 }
