@@ -15,6 +15,10 @@ func urlHandler(res http.ResponseWriter, req *http.Request) {
 			res.Write([]byte(err.Error()))
 			return
 		}
+		if len(urlToShorten) == 0 {			
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
 		shortURL := req.Host + req.URL.Path + makeShortURL(urlToShorten)
 		if len(req.URL.Scheme) == 0 {
@@ -27,7 +31,15 @@ func urlHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	if req.Method == http.MethodGet {
 		shortURL := req.URL.Path
-		location := dbMap[string(shortURL[1:])]
+		if len(shortURL) != 9 {
+			res.WriteHeader(http.StatusBadRequest)
+			return			
+		}
+		location, ok := dbMap[string(shortURL[1:])]
+		if !ok {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		res.Header().Set("Location", location)
 		http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
 	}

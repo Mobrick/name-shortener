@@ -35,9 +35,32 @@ func TestGetURLHandler(t *testing.T) {
 				location: "http://example.com/",
 			},
 		},
+		{
+			name:    "9 letters request GET test #1",
+			request: "DDAAssaaD",
+			db: map[string]string{
+				"DDAAssaa": "http://example.com/",
+			},
+			want: want{
+				code:     400,
+				location: "",
+			},
+		},
+		{
+			name:    "empty request GET test #1",
+			request: "",
+			db: map[string]string{
+				"DDAAssaa": "http://example.com/",
+			},
+			want: want{
+				code:     400,
+				location: "",
+			},
+		},
 	}
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {			
+			dbMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/"+test.request, nil)
 			w := httptest.NewRecorder()
 			urlHandler(w, request)
@@ -45,9 +68,8 @@ func TestGetURLHandler(t *testing.T) {
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
 			defer res.Body.Close()
-			resLocation, err := res.Location()
+			resLocation := res.Header.Get("Location")
 
-			require.NoError(t, err)
 			assert.Equal(t, test.want.location, resLocation)
 			assert.Equal(t, test.want.code, res.StatusCode)
 		})
@@ -64,20 +86,31 @@ func TestPostURLHandler(t *testing.T) {
 	}
 	tests := []struct {
 		name string
+		request *http.Request
 		want want
 	}{
 		{
 			name: "positive POST test #1",
+			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/")),
 			want: want{
 				code:        201,
 				responseLen: len("http://example.com/") + shortURLLength,
 				contentType: "text/plain",
 			},
+		},		
+		{
+			name: "empty POST test #1",
+			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("")),
+			want: want{
+				code:        400,
+				responseLen: 0,
+				contentType: "",
+			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/"))
+			request := test.request
 			w := httptest.NewRecorder()
 			urlHandler(w, request)
 
