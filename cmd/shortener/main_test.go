@@ -62,10 +62,8 @@ func TestGetURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			dbMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/"+test.request, nil)
-			
-			log.Print("request body: " + string(test.request))
 			w := httptest.NewRecorder()
-			shortenedURLHandle(w, request)
+			urlHandler(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
@@ -114,7 +112,7 @@ func TestPostURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := test.request
 			w := httptest.NewRecorder()
-			longURLHandle(w, request)
+			urlHandler(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)

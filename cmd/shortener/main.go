@@ -2,59 +2,59 @@ package main
 
 import (
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 var dbMap map[string]string
 
-func longURLHandle(res http.ResponseWriter, req *http.Request) {
-	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
-	if err != nil {
-		res.Write([]byte(err.Error()))
-		return
-	}
-	if len(urlToShorten) == 0 {			
-		res.WriteHeader(http.StatusBadRequest)
-		return
-	}
+func urlHandler(res http.ResponseWriter, req *http.Request) {
+	if req.Method == http.MethodPost {
+		urlToShorten, err := io.ReadAll(io.Reader(req.Body))
+		if err != nil {
+			res.Write([]byte(err.Error()))
+			return
+		}
+		if len(urlToShorten) == 0 {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-	shortURL := req.Host + req.URL.Path + makeShortURL(urlToShorten)
-	if len(req.URL.Scheme) == 0 {
-		shortURL = "http://" + shortURL
-	}
+		shortURL := req.Host + req.URL.Path + makeShortURL(urlToShorten)
+		if len(req.URL.Scheme) == 0 {
+			shortURL = "http://" + shortURL
+		}
 
-	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(shortURL))
-}
-
-func shortenedURLHandle(res http.ResponseWriter, req *http.Request) {
-	shortURL := chi.URLParam(req, "shortURL")
-	if len(shortURL) != 8 {
-		res.WriteHeader(http.StatusBadRequest)
-		return			
+		res.Header().Set("Content-Type", "text/plain")
+		res.WriteHeader(http.StatusCreated)
+		res.Write([]byte(shortURL))
 	}
-	location, ok := dbMap[string(shortURL)]
-	if !ok {
-		res.WriteHeader(http.StatusBadRequest)
-		return
+	if req.Method == http.MethodGet {
+		shortURL := req.URL.Path
+		if len(shortURL) != 9 {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		location, ok := dbMap[string(shortURL[1:])]
+		if !ok {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		res.Header().Set("Location", location)
+		http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
 	}
-	res.Header().Set("Location", location)
-	http.Redirect(res, req, location, http.StatusTemporaryRedirect)
 }
 
 func main() {
 	dbMap = make(map[string]string)
-	r := chi.NewRouter()
 
-	r.Post(`/`, longURLHandle)
-	r.Get(`/{shortURL}`, shortenedURLHandle)
+	mux := http.NewServeMux()
+	mux.HandleFunc(`/`, urlHandler)
 
-	log.Fatal(http.ListenAndServe(`:8080`, r))
+	err := http.ListenAndServe(`:8080`, mux)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func makeShortURL(longURL []byte) string {
