@@ -59,11 +59,13 @@ func TestGetURLHandler(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {			
+		t.Run(test.name, func(t *testing.T) {
 			dbMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/"+test.request, nil)
+			
+			log.Print("request body: " + string(test.request))
 			w := httptest.NewRecorder()
-			urlHandler(w, request)
+			shortenedURLHandle(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
@@ -85,21 +87,21 @@ func TestPostURLHandler(t *testing.T) {
 		contentType string
 	}
 	tests := []struct {
-		name string
+		name    string
 		request *http.Request
-		want want
+		want    want
 	}{
 		{
-			name: "positive POST test #1",
+			name:    "positive POST test #1",
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/")),
 			want: want{
 				code:        201,
 				responseLen: len("http://example.com/") + shortURLLength,
 				contentType: "text/plain",
 			},
-		},		
+		},
 		{
-			name: "empty POST test #1",
+			name:    "empty POST test #1",
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("")),
 			want: want{
 				code:        400,
@@ -112,7 +114,7 @@ func TestPostURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := test.request
 			w := httptest.NewRecorder()
-			urlHandler(w, request)
+			longURLHandle(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
