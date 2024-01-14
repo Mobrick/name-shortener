@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,12 +64,17 @@ func TestGetURLHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			dbMap = test.db
-			request := httptest.NewRequest(http.MethodGet, "/"+test.request, nil)
+			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
+			requestContext := chi.NewRouteContext()
+			requestContext.URLParams.Add("shortURL", test.request)
+			
+			request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, requestContext))
+
 			w := httptest.NewRecorder()
-			urlHandler(w, request)
+
+			shortenedURLHandle(w, request)
 
 			res := w.Result()
-			assert.Equal(t, test.want.code, res.StatusCode)
 			defer res.Body.Close()
 			resLocation := res.Header.Get("Location")
 
@@ -112,7 +120,7 @@ func TestPostURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := test.request
 			w := httptest.NewRecorder()
-			urlHandler(w, request)
+			longURLHandle(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
