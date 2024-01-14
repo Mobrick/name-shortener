@@ -33,18 +33,18 @@ func longURLHandle(res http.ResponseWriter, req *http.Request) {
 }
 
 func shortenedURLHandle(res http.ResponseWriter, req *http.Request) {
-	shortURL := req.URL.Path
-	if len(shortURL) != 9 {
+	shortURL := chi.URLParam(req, "shortURL")
+	if len(shortURL) != 8 {
 		res.WriteHeader(http.StatusBadRequest)
 		return			
 	}
-	location, ok := dbMap[string(shortURL[1:])]
+	location, ok := dbMap[string(shortURL)]
 	if !ok {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	res.Header().Set("Location", location)
-	http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
+	http.Redirect(res, req, location, http.StatusTemporaryRedirect)
 }
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Post(`/`, longURLHandle)
-	r.Get(`/`, shortenedURLHandle)
+	r.Get(`/{shortURL}`, shortenedURLHandle)
 
 	log.Fatal(http.ListenAndServe(`:8080`, r))
 }
