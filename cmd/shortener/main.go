@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"io"
 	"log"
 	"math/rand"
@@ -29,7 +28,7 @@ func longURLHandle(res http.ResponseWriter, req *http.Request) {
 		shortURL += "/"
 	}
 
-	// TODO возможно эти условия понадобятся только для тестирования, так что переделать тесты на использование args
+	
 	if len(flagShortURLBaseAddr) != 0 {
 		shortURL += makeShortURL(urlToShorten)
 	} else {
@@ -77,17 +76,7 @@ func shortenedURLHandle(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
 }
 
-// TODO перенести в другое место эту штуку
 
-var flagRunAddr string
-var flagShortURLBaseAddr string
-
-func parseFlags() {
-	flag.StringVar(&flagRunAddr, "a", ":8080", "address to run server")
-	flag.StringVar(&flagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
-
-	flag.Parse()
-}
 
 func main() {
 	parseFlags()
