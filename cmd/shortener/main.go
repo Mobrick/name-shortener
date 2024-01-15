@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log"
 	"math/rand"
@@ -22,14 +23,38 @@ func longURLHandle(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	shortURL := req.Host + req.URL.Path + makeShortURL(urlToShorten)
-	if len(req.URL.Scheme) == 0 {
-		shortURL = "http://" + shortURL
+	shortURL := flagShortURLBaseAddr
+
+	// TODO возможно эти условия понадобятся только для тестирования, так что переделать тесты на использование args
+	if len(flagShortURLBaseAddr) != 0 {
+		shortURL += makeShortURL(urlToShorten)
+	} else {
+		shortURL = req.Host + req.URL.Path + makeShortURL(urlToShorten)
+		if len(req.URL.Scheme) == 0 {
+			shortURL = "http://" + shortURL
+		}
 	}
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(shortURL))
+}
+
+func makeShortURL(longURL []byte) string {
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	shortURLLength := 8
+	var newURL []byte
+	for {
+		newURL = make([]byte, shortURLLength)
+		for i := 0; i < shortURLLength; i++ {
+			newURL[i] = letters[rand.Intn(len(letters))]
+		}
+		if _, ok := dbMap[string(newURL)]; !ok {
+			break
+		}
+	}
+	dbMap[string(newURL)] = string(longURL)
+	return string(newURL)
 }
 
 func shortenedURLHandle(res http.ResponseWriter, req *http.Request) {
@@ -48,29 +73,25 @@ func shortenedURLHandle(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, dbMap[string(shortURL[1:])], http.StatusTemporaryRedirect)
 }
 
+// TODO перенести в другое место эту штуку
+
+var flagRunAddr string
+var flagShortURLBaseAddr string
+
+func parseFlags() {
+	flag.StringVar(&flagRunAddr, "a", ":8080", "address to run server")
+	flag.StringVar(&flagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
+
+	flag.Parse()
+}
+
 func main() {
+	parseFlags()
 	dbMap = make(map[string]string)
 	r := chi.NewRouter()
 
 	r.Post(`/`, longURLHandle)
 	r.Get(`/{shortURL}`, shortenedURLHandle)
 
-	log.Fatal(http.ListenAndServe(`:8080`, r))
-}
-
-func makeShortURL(longURL []byte) string {
-	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	shortURLLength := 8
-	var newURL []byte
-	for {
-		newURL = make([]byte, shortURLLength)
-		for i := 0; i < shortURLLength; i++ {
-			newURL[i] = letters[rand.Intn(len(letters))]
-		}
-		if _, ok := dbMap[string(newURL)]; !ok {
-			break
-		}
-	}
-	dbMap[string(newURL)] = string(longURL)
-	return string(newURL)
+	log.Fatal(http.ListenAndServe(flagRunAddr, r))
 }
