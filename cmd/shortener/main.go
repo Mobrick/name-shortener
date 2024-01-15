@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -24,6 +25,9 @@ func longURLHandle(res http.ResponseWriter, req *http.Request) {
 	}
 
 	shortURL := flagShortURLBaseAddr
+	if !strings.HasSuffix(shortURL, "/") {
+		shortURL += "/"
+	}
 
 	// TODO возможно эти условия понадобятся только для тестирования, так что переделать тесты на использование args
 	if len(flagShortURLBaseAddr) != 0 {
