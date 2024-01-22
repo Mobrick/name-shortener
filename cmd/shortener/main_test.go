@@ -11,12 +11,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/handler"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetURLHandler(t *testing.T) {
-	dbMap = make(map[string]string)
+	env := &handler.HandlerEnv{
+		DatabaseMap: config.NewDBMap(),
+	}
 	type want struct {
 		code     int
 		location string
@@ -63,16 +68,16 @@ func TestGetURLHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dbMap = test.db
+			env.DatabaseMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()
 			requestContext.URLParams.Add("shortURL", test.request)
-			
+
 			request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, requestContext))
 
 			w := httptest.NewRecorder()
 
-			shortenedURLHandle(w, request)
+			env.ShortenedURLHandle(w, request)
 
 			res := w.Result()
 			defer res.Body.Close()
@@ -85,7 +90,13 @@ func TestGetURLHandler(t *testing.T) {
 }
 
 func TestPostURLHandler(t *testing.T) {
-	dbMap = make(map[string]string)
+	env := &handler.HandlerEnv{
+		DatabaseMap: config.NewDBMap(),
+		ConfigStruct: &config.Config{
+			FlagRunAddr:          ":8080",
+			FlagShortURLBaseAddr: "http://localhost:8080/",
+		},
+	}
 	shortURLLength := 8
 	type want struct {
 		code        int
@@ -102,7 +113,7 @@ func TestPostURLHandler(t *testing.T) {
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/")),
 			want: want{
 				code:        201,
-				responseLen: len("http://example.com/") + shortURLLength,
+				responseLen: len(env.ConfigStruct.FlagShortURLBaseAddr) + shortURLLength,
 				contentType: "text/plain",
 			},
 		},
@@ -120,7 +131,7 @@ func TestPostURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := test.request
 			w := httptest.NewRecorder()
-			longURLHandle(w, request)
+			env.LongURLHandle(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
