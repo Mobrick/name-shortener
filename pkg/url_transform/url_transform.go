@@ -10,14 +10,14 @@ import (
 	"github.com/Mobrick/name-shortener/utils"
 )
 
-func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request) string {
+func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request, shortURLLength int) string {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
 	}
 
 	keys := utils.GetKeys(dbMap)
 
-	shortURL := encodeURL(urlToShorten, keys)
+	shortURL := encodeURL(urlToShorten, keys, shortURLLength)
 	dbMap[shortURL] = string(urlToShorten)
 
 	if len(shortAddress) != 0 {
@@ -31,18 +31,18 @@ func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []b
 	return shortAddress
 }
 
-func encodeURL(longURL []byte, keys []string) string {
+func encodeURL(longURL []byte, keys []string, shortURLLength int) string {
 	var newURL string
 
 	for {
-		hash := make([]byte, 8)
+		hash := make([]byte, shortURLLength)
 		_, err := rand.Read(hash)
 		if err != nil {
 			panic(err)
 		}
 
 		encodedHash := base64.URLEncoding.EncodeToString(hash)
-		newURL = encodedHash[:8]
+		newURL = encodedHash[:shortURLLength]
 
 		if !slices.Contains(keys, newURL) {
 			break
