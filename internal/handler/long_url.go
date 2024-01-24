@@ -17,7 +17,7 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortAddress := urltf.MakeShortUrl(env.ConfigStruct.FlagShortURLBaseAddr, env.DatabaseMap, urlToShorten, req)
+	shortAddress := urltf.MakeShortUrl(env.ConfigStruct.FlagShortURLBaseAddr, env.DatabaseMap, urlToShorten, req, ShortURLLength)
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)

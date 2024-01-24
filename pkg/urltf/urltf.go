@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request) string {
+func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request, shortURLLength int) string {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
 	}
 
 
-	shortURL := encodeURL(urlToShorten, dbMap)
+	shortURL := encodeURL(urlToShorten, dbMap, shortURLLength)
 	dbMap[shortURL] = string(urlToShorten)
 
 	if len(shortAddress) != 0 {
@@ -27,18 +27,18 @@ func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []b
 	return shortAddress
 }
 
-func encodeURL(longURL []byte, dbMap map[string]string) string {
+func encodeURL(longURL []byte, dbMap map[string]string, shortURLLength int) string {
 	var newURL string
 
 	for {
-		hash := make([]byte, 8)
+		hash := make([]byte, shortURLLength)
 		_, err := rand.Read(hash)
 		if err != nil {
 			panic(err)
 		}
 
 		encodedHash := base64.URLEncoding.EncodeToString(hash)
-		newURL = encodedHash[:8]
+		newURL = encodedHash[:shortURLLength]
 
 		if _, ok := dbMap[string(newURL)]; !ok {
 			break
