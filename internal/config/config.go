@@ -10,21 +10,6 @@ type Config struct {
     FlagShortURLBaseAddr string
 }
 
-type Env struct {
-	DatabaseMap     map[string]string
-	ConfigStruct    *Config
-}
-
-const (
-	ShortURLLength = 8
-)
-
-func NewDBMap() map[string]string {
-	return make(map[string]string)
-}
-
-
-
 func MakeConfig() *Config {
     config := &Config{}
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/handler"
+	"github.com/Mobrick/name-shortener/database"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ import (
 
 func TestGetURLHandler(t *testing.T) {
 	env := &handler.HandlerEnv{
-		DatabaseMap: config.NewDBMap(),
+		DatabaseMap: database.NewDBMap(),
 	}
 	type want struct {
 		code     int
@@ -91,7 +92,7 @@ func TestGetURLHandler(t *testing.T) {
 
 func TestPostURLHandler(t *testing.T) {
 	env := &handler.HandlerEnv{
-		DatabaseMap: config.NewDBMap(),
+		DatabaseMap: database.NewDBMap(),
 		ConfigStruct: &config.Config{
 			FlagRunAddr:          ":8080",
 			FlagShortURLBaseAddr: "http://localhost:8080/",

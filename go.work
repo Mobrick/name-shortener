@@ -4,6 +4,6 @@ use (
 	.
 	./internal/config
 	./internal/handler
-	./pkg/utils
-	./pkg/url_transform
+	./internal/database
+	./pkg/urltf
 )

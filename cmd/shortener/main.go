@@ -5,13 +5,14 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/database"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	env := &handler.HandlerEnv{
-		DatabaseMap:  config.NewDBMap(),
+		DatabaseMap:  database.NewDBMap(),
 		ConfigStruct: config.MakeConfig(),
 	}
 	r := chi.NewRouter()

@@ -4,11 +4,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/config"
-	"github.com/Mobrick/name-shortener/url_transform"
+	"github.com/Mobrick/name-shortener/urltf"
 )
-
-type HandlerEnv config.Env
 
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
@@ -20,7 +17,7 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortAddress := url_transform.MakeShortUrl(env.ConfigStruct.FlagShortURLBaseAddr, env.DatabaseMap, urlToShorten, req)
+	shortAddress := urltf.MakeShortUrl(env.ConfigStruct.FlagShortURLBaseAddr, env.DatabaseMap, urlToShorten, req)
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)

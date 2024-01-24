@@ -1,13 +1,10 @@
-package url_transform
+package urltf
 
 import (
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
-	"slices"
 	"strings"
-
-	"github.com/Mobrick/name-shortener/utils"
 )
 
 func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request) string {
@@ -15,9 +12,8 @@ func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []b
 		shortAddress += "/"
 	}
 
-	keys := utils.GetKeys(dbMap)
 
-	shortURL := encodeURL(urlToShorten, keys)
+	shortURL := encodeURL(urlToShorten, dbMap)
 	dbMap[shortURL] = string(urlToShorten)
 
 	if len(shortAddress) != 0 {
@@ -31,7 +27,7 @@ func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []b
 	return shortAddress
 }
 
-func encodeURL(longURL []byte, keys []string) string {
+func encodeURL(longURL []byte, dbMap map[string]string) string {
 	var newURL string
 
 	for {
@@ -44,7 +40,7 @@ func encodeURL(longURL []byte, keys []string) string {
 		encodedHash := base64.URLEncoding.EncodeToString(hash)
 		newURL = encodedHash[:8]
 
-		if !slices.Contains(keys, newURL) {
+		if _, ok := dbMap[string(newURL)]; !ok {
 			break
 		}
 	}

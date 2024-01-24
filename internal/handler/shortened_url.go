@@ -2,14 +2,13 @@ package handler
 
 import (
 	"net/http"
-
-	"github.com/Mobrick/name-shortener/config"
+	
 	"github.com/go-chi/chi/v5"
 )
 
 func (env HandlerEnv) ShortenedURLHandle(res http.ResponseWriter, req *http.Request) {
 	shortURL := chi.URLParam((req), "shortURL")
-	if len(shortURL) != config.ShortURLLength {
+	if len(shortURL) != ShortURLLength {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -21,4 +20,3 @@ func (env HandlerEnv) ShortenedURLHandle(res http.ResponseWriter, req *http.Requ
 	res.Header().Set("Location", location)
 	http.Redirect(res, req, env.DatabaseMap[string(shortURL)], http.StatusTemporaryRedirect)
 }
-
