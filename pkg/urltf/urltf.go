@@ -7,14 +7,12 @@ import (
 	"strings"
 )
 
-func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request, shortURLLength int) string {
+func MakeShortAddressAndURL(shortAddress string, dbMap map[string]string, urlToShorten []byte, req *http.Request, shortURLLength int) (string, string) {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
 	}
 
-
 	shortURL := encodeURL(urlToShorten, dbMap, shortURLLength)
-	dbMap[shortURL] = string(urlToShorten)
 
 	if len(shortAddress) != 0 {
 		shortAddress += shortURL
@@ -24,7 +22,7 @@ func MakeShortUrl(shortAddress string, dbMap map[string]string, urlToShorten []b
 			shortAddress = "http://" + shortAddress
 		}
 	}
-	return shortAddress
+	return shortAddress, shortURL
 }
 
 func encodeURL(longURL []byte, dbMap map[string]string, shortURLLength int) string {
