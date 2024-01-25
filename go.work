@@ -1,0 +1,9 @@
+go 1.21.5
+
+use (
+	.
+	./internal/config
+	./internal/handler
+	./internal/database
+	./pkg/urltf
+)
