@@ -29,8 +29,9 @@ func main() {
 	}
 	r := chi.NewRouter()
 	
-	r.Post(`/`,  logger.WithLogging(env.LongURLHandle))
 	r.Get(`/{shortURL}`, logger.WithLogging(env.ShortenedURLHandle))
+	r.Post(`/`, logger.WithLogging(env.LongURLHandle))
+	r.Post(`/api/shorten`, logger.WithLogging(env.LongURLHandle))
 
 	sugar.Infow(
         "Starting server",

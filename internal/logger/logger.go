@@ -8,6 +8,7 @@ import (
 )
 
 var Sugar zap.SugaredLogger
+var Log *zap.Logger = zap.NewNop()
 
 // WithLogging добавляет дополнительный код для регистрации сведений о запросе
 // и возвращает новый http.HandlerFunc.
