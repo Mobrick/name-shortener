@@ -19,7 +19,7 @@ func main() {
 	}
 	defer zapLogger.Sync()
 
-	sugar := *zapLogger.Sugar()	
+	sugar := *zapLogger.Sugar()
 
 	logger.Sugar = sugar
 
@@ -28,15 +28,15 @@ func main() {
 		ConfigStruct: config.MakeConfig(),
 	}
 	r := chi.NewRouter()
-	
+
 	r.Get(`/{shortURL}`, logger.WithLogging(env.ShortenedURLHandle))
 	r.Post(`/`, logger.WithLogging(env.LongURLHandle))
-	r.Post(`/api/shorten`, logger.WithLogging(env.LongURLHandle))
+	r.Post(`/api/shorten`, logger.WithLogging(env.LongURLFromJSONHandle))
 
 	sugar.Infow(
-        "Starting server",
-        "addr", env.ConfigStruct.FlagShortURLBaseAddr,
-    )
+		"Starting server",
+		"addr", env.ConfigStruct.FlagShortURLBaseAddr,
+	)
 
 	log.Fatal(http.ListenAndServe(env.ConfigStruct.FlagRunAddr, r))
 }
