@@ -7,6 +7,7 @@ import (
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
 	"github.com/Mobrick/name-shortener/handler"
+	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/logger"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -29,9 +30,13 @@ func main() {
 	}
 	r := chi.NewRouter()
 
-	r.Get(`/{shortURL}`, logger.WithLogging(env.ShortenedURLHandle))
-	r.Post(`/`, logger.WithLogging(env.LongURLHandle))
-	r.Post(`/api/shorten`, logger.WithLogging(env.LongURLFromJSONHandle))
+	r.Use(compression.GzipMiddleware)
+	r.Use(logger.LoggingMiddleware)
+
+	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
+
+	r.Post(`/`, env.LongURLHandle)
+	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)
 
 	sugar.Infow(
 		"Starting server",

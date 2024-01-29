@@ -10,9 +10,9 @@ import (
 var Sugar zap.SugaredLogger
 var Log *zap.Logger = zap.NewNop()
 
-// WithLogging добавляет дополнительный код для регистрации сведений о запросе
+// LoggingMiddleware добавляет дополнительный код для регистрации сведений о запросе
 // и возвращает новый http.HandlerFunc.
-func WithLogging(h http.HandlerFunc) http.HandlerFunc {
+func LoggingMiddleware(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		// функция Now() возвращает текущее время
 		start := time.Now()
@@ -48,7 +48,7 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 
 	}
 	// возвращаем функционально расширенный хендлер
-	return logFn
+	return http.HandlerFunc(logFn)
 }
 
 type (
