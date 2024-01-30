@@ -27,7 +27,7 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	dbMap := env.DatabaseMap
+	dbMap := env.DatabaseData.DatabaseMap
 	urlToShorten := []byte(request.URL)
 	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, dbMap, urlToShorten, req, ShortURLLength)
 	dbMap[shortURL] = string(urlToShorten)

@@ -6,5 +6,6 @@ use (
 	./internal/handler
 	./internal/database
 	./internal/logger
+	./internal/filestorage
 	./pkg/urltf
 )

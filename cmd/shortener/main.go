@@ -24,9 +24,10 @@ func main() {
 
 	logger.Sugar = sugar
 
+	cfg := config.MakeConfig()
 	env := &handler.HandlerEnv{
-		DatabaseMap:  database.NewDBMap(),
-		ConfigStruct: config.MakeConfig(),
+		ConfigStruct: cfg,
+		DatabaseData:  database.NewDBFromFile(cfg.FlagFileStoragePath),
 	}
 	r := chi.NewRouter()
 
@@ -40,8 +41,8 @@ func main() {
 
 	sugar.Infow(
 		"Starting server",
-		"addr", env.ConfigStruct.FlagShortURLBaseAddr,
+		"addr", cfg.FlagShortURLBaseAddr,
 	)
 
-	log.Fatal(http.ListenAndServe(env.ConfigStruct.FlagRunAddr, r))
+	log.Fatal(http.ListenAndServe(cfg.FlagRunAddr, r))
 }

@@ -18,7 +18,7 @@ import (
 
 func TestLongURLHandle(t *testing.T) {
 	env := &handler.HandlerEnv{
-		DatabaseMap:  database.NewDBMap(),
+		DatabaseData:  database.NewDBFromFile("tmp/short-url-db.json"),
 		ConfigStruct: config.MakeConfig(),
 	}
 	shortURLLength := handler.ShortURLLength
@@ -75,7 +75,7 @@ func TestLongURLHandle(t *testing.T) {
 
 func ShortenedURLHandle(t *testing.T) {
 	env := &handler.HandlerEnv{
-		DatabaseMap: database.NewDBMap(),
+		DatabaseData:  database.NewDBFromFile("tmp/short-url-db.json"),
 	}
 	type want struct {
 		code     int
@@ -123,7 +123,7 @@ func ShortenedURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			env.DatabaseMap = test.db
+			env.DatabaseData.DatabaseMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()
 			requestContext.URLParams.Add("shortURL", test.request)
