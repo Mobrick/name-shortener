@@ -19,7 +19,7 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 	}
 	dbMap := env.DatabaseData.DatabaseMap
 	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, dbMap, urlToShorten, req, ShortURLLength)
-	dbMap[shortURL] = string(urlToShorten)
+	env.DatabaseData.AddNewRecordToDatabase(shortURL, env.ConfigStruct.FlagShortURLBaseAddr, env.ConfigStruct.FlagFileStoragePath)
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)

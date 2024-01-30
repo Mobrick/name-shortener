@@ -30,7 +30,7 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 	dbMap := env.DatabaseData.DatabaseMap
 	urlToShorten := []byte(request.URL)
 	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, dbMap, urlToShorten, req, ShortURLLength)
-	dbMap[shortURL] = string(urlToShorten)
+	env.DatabaseData.AddNewRecordToDatabase(shortURL, env.ConfigStruct.FlagShortURLBaseAddr, env.ConfigStruct.FlagFileStoragePath)
 	response := models.Response{
 		Result: shortAddress,
 	}

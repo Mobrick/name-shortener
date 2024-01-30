@@ -37,3 +37,18 @@ func LoadURLRecords(fileName string) ([]models.URLRecord, error) {
 
 	return records, nil
 }
+
+func UploadNewURLRecord(newRecord models.URLRecord, fileName string) error {
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+    if err != nil {
+        return err
+    }
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(newRecord)
+	if err != nil {
+		return err
+	}
+	return nil
+}

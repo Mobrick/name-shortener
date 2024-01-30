@@ -3,6 +3,7 @@ package database
 import (
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/google/uuid"
 )
 
 type DatabaseData struct {
@@ -39,16 +40,14 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 	return dbMap, urlRecords
 }
 
-func AddNewRecordToDatabase(dbData DatabaseData, shortURL string, originalURL string) {
+func (dbData DatabaseData) AddNewRecordToDatabase(shortURL string, originalURL string, fileName string) {
 	newRecord := models.URLRecord{
 		OriginalURL: originalURL,
 		ShortURL:    shortURL,
 	}
-	newRecord.UUID = generateNewUUID(dbData)
+	newRecord.UUID = uuid.New().String()
 
 	dbData.DatabaseMap[shortURL] = originalURL
-}
 
-func generateNewUUID(dbData DatabaseData) {
-
+	filestorage.UploadNewURLRecord(newRecord, fileName)
 }
