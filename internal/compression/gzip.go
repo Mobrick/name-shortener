@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-
-	"github.com/Mobrick/name-shortener/logger"
 )
 
 var acceptableContentTypes = []string{"application/json", "text/html"}
@@ -22,7 +20,7 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 }
 
 type gzipReader struct {
-	r     io.ReadCloser
+	r  io.ReadCloser
 	zr *gzip.Reader
 }
 
@@ -33,7 +31,7 @@ func newGzipReader(r io.ReadCloser) (*gzipReader, error) {
 	}
 
 	return &gzipReader{
-		r:     r,
+		r:  r,
 		zr: zr,
 	}, nil
 }
@@ -49,7 +47,7 @@ func (c *gzipReader) Close() error {
 	return c.zr.Close()
 }
 
-func GzipMiddleware(next http.Handler) http.Handler {
+func DecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// проверка сжаты ли данные в запросе клиента
@@ -67,55 +65,6 @@ func GzipMiddleware(next http.Handler) http.Handler {
 			defer gzipReader.Close()
 		}
 
-		var acceptContentType bool
-
-		// проверка допустимости типа контента
-		headerContentType := r.Header.Get("Content-Type")
-
-		for _, contentType := range acceptableContentTypes {
-			if headerContentType == contentType {
-				acceptContentType = true
-				break
-			}
-		}
-
-		if !acceptContentType {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// проверка поддержки gzip
-		encodeHeaderValues := r.Header.Values("Accept-Encoding")
-
-		var acceptGzip bool
-	out:
-		for _, value := range encodeHeaderValues {
-			encodings := strings.Split(value, ",")
-
-			for _, encoding := range encodings {
-				if strings.TrimSpace(encoding) == "gzip" {
-					acceptGzip = true
-					break out
-				}
-			}
-		}
-		logger.Sugar.Infoln("Header values has gzip", acceptGzip)
-
-		if !acceptGzip {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// создаём gzip.Writer поверх текущего w
-		zw, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil {
-			io.WriteString(w, err.Error())
-			return
-		}
-		defer zw.Close()
-
-		w.Header().Set("Content-Encoding", "gzip")
-		// передаём обработчику страницы переменную типа gzipWriter для вывода данных
-		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: zw}, r)
+		next.ServeHTTP(w, r)
 	})
 }

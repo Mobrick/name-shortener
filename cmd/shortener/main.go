@@ -10,6 +10,7 @@ import (
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/logger"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
 
@@ -27,11 +28,12 @@ func main() {
 	cfg := config.MakeConfig()
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData:  database.NewDBFromFile(cfg.FlagFileStoragePath),
+		DatabaseData: database.NewDBFromFile(cfg.FlagFileStoragePath),
 	}
 	r := chi.NewRouter()
 
-	r.Use(compression.GzipMiddleware)
+	r.Use(middleware.Compress(5, "application/json", "text/html"))
+	r.Use(compression.DecompressMiddleware)
 	r.Use(logger.LoggingMiddleware)
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
