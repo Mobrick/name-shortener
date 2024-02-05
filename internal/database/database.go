@@ -7,15 +7,22 @@ import (
 )
 
 type DatabaseData struct {
-	URLRecords  []models.URLRecord
-	DatabaseMap map[string]string
+	URLRecords      []models.URLRecord
+	DatabaseMap     map[string]string
+	FileStoragePath string
+}
+
+func (dbData DatabaseData) Get(shortURL string) (string, bool) {
+	location, ok := dbData.DatabaseMap[shortURL]
+	return location, ok
 }
 
 func NewDBFromFile(fileStoragePath string) DatabaseData {
 	if len(fileStoragePath) == 0 {
 		return DatabaseData{
-			URLRecords:  make([]models.URLRecord, 0),
-			DatabaseMap: make(map[string]string),
+			URLRecords:      make([]models.URLRecord, 0),
+			DatabaseMap:     make(map[string]string),
+			FileStoragePath: fileStoragePath,
 		}
 	}
 	urlRecords, err := filestorage.LoadURLRecords(fileStoragePath)
@@ -40,7 +47,7 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 	return dbMap, urlRecords
 }
 
-func (dbData DatabaseData) AddNewRecordToDatabase(shortURL string, originalURL string, fileName string) {
+func (dbData DatabaseData) Add(shortURL string, originalURL string) {
 	newRecord := models.URLRecord{
 		OriginalURL: originalURL,
 		ShortURL:    shortURL,
@@ -49,5 +56,15 @@ func (dbData DatabaseData) AddNewRecordToDatabase(shortURL string, originalURL s
 
 	dbData.DatabaseMap[shortURL] = originalURL
 
-	filestorage.UploadNewURLRecord(newRecord, fileName)
+	filestorage.UploadNewURLRecord(newRecord, dbData.FileStoragePath)
+}
+
+func (dbData DatabaseData) Contains(shortUrl string) bool {
+	dbMap := dbData.DatabaseMap
+
+	if _, ok := dbMap[string(shortUrl)]; !ok {
+		return false
+	} else {
+		return true
+	}
 }
