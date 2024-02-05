@@ -32,8 +32,9 @@ func NewDBFromFile(fileStoragePath string) DatabaseData {
 
 	dbMap, urlRecords := dbMapFromURLRecords(urlRecords)
 	databaseData := DatabaseData{
-		URLRecords:  urlRecords,
-		DatabaseMap: dbMap,
+		URLRecords:      urlRecords,
+		DatabaseMap:     dbMap,
+		FileStoragePath: fileStoragePath,
 	}
 
 	return databaseData
