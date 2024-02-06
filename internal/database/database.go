@@ -1,15 +1,17 @@
 package database
 
 import (
+	"os"
+
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
 )
 
 type DatabaseData struct {
-	URLRecords      []models.URLRecord
-	DatabaseMap     map[string]string
-	FileStoragePath string
+	URLRecords  []models.URLRecord
+	DatabaseMap map[string]string
+	FileStorage *os.File
 }
 
 func (dbData DatabaseData) Get(shortURL string) (string, bool) {
@@ -17,24 +19,23 @@ func (dbData DatabaseData) Get(shortURL string) (string, bool) {
 	return location, ok
 }
 
-func NewDBFromFile(fileStoragePath string) DatabaseData {
-	if len(fileStoragePath) == 0 {
+func NewDBFromFile(fileStorage *os.File) DatabaseData {
+	if fileStorage == nil {
 		return DatabaseData{
-			URLRecords:      make([]models.URLRecord, 0),
-			DatabaseMap:     make(map[string]string),
-			FileStoragePath: fileStoragePath,
+			URLRecords:  make([]models.URLRecord, 0),
+			DatabaseMap: make(map[string]string),
 		}
 	}
-	urlRecords, err := filestorage.LoadURLRecords(fileStoragePath)
+	urlRecords, err := filestorage.LoadURLRecords(fileStorage)
 	if err != nil {
 		panic(err)
 	}
 
 	dbMap, urlRecords := dbMapFromURLRecords(urlRecords)
 	databaseData := DatabaseData{
-		URLRecords:      urlRecords,
-		DatabaseMap:     dbMap,
-		FileStoragePath: fileStoragePath,
+		URLRecords:  urlRecords,
+		DatabaseMap: dbMap,
+		FileStorage: fileStorage,
 	}
 
 	return databaseData
@@ -55,9 +56,10 @@ func (dbData DatabaseData) Add(shortURL string, originalURL string) {
 	}
 	newRecord.UUID = uuid.New().String()
 
+	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	dbData.DatabaseMap[shortURL] = originalURL
 
-	filestorage.UploadNewURLRecord(newRecord, dbData.FileStoragePath)
+	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
 }
 
 func (dbData DatabaseData) Contains(shortUrl string) bool {

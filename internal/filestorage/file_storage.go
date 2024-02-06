@@ -9,19 +9,7 @@ import (
 	"github.com/Mobrick/name-shortener/internal/models"
 )
 
-func LoadURLRecords(fileName string) ([]models.URLRecord, error) {
-
-	err := os.MkdirAll(filepath.Dir(fileName), os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0666)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
+func LoadURLRecords(file *os.File) ([]models.URLRecord, error) {
 	scanner := bufio.NewScanner(file)
 	var records []models.URLRecord
 
@@ -38,17 +26,33 @@ func LoadURLRecords(fileName string) ([]models.URLRecord, error) {
 	return records, nil
 }
 
-func UploadNewURLRecord(newRecord models.URLRecord, fileName string) error {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-    if err != nil {
-        return err
-    }
-	defer file.Close()
-
+func UploadNewURLRecord(newRecord models.URLRecord, file *os.File) error {
+	// На случай если флаг адреса файла был пуст, пропускаем добавление в файл
+	if file == nil {
+		return nil
+	}
 	encoder := json.NewEncoder(file)
-	err = encoder.Encode(newRecord)
+	err := encoder.Encode(newRecord)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func MakeFile(fileName string) (*os.File, error) {	
+	// На случай если флаг адреса файла был пуст, открытие файла
+	if len(fileName) == 0 {
+		return nil, nil
+	}
+
+	err := os.MkdirAll(filepath.Dir(fileName), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }
