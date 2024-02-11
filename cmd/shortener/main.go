@@ -40,7 +40,7 @@ func main() {
 
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData: database.NewDB(file),
+		DatabaseData: database.NewDB(file, cfg.FlagDBConnectionAddress),
 	}
 	defer env.DatabaseData.DatabaseConnection.Close()
 

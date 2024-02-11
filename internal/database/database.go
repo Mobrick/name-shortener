@@ -25,9 +25,9 @@ func (dbData DatabaseData) Get(shortURL string) (string, bool) {
 	return location, ok
 }
 
-func NewDB(fileStorage *os.File) DatabaseData {
+func NewDB(fileStorage *os.File, connectionString string) DatabaseData {
 	dbData := NewDBFromFile(fileStorage)
-	dbData.DatabaseConnection = NewDBConnection()
+	dbData.DatabaseConnection = NewDBConnection(connectionString)
 	return dbData
 }
 
@@ -53,14 +53,7 @@ func NewDBFromFile(fileStorage *os.File) DatabaseData {
 	return databaseData
 }
 
-func NewDBConnection() *sql.DB {
-	data, err := os.ReadFile("connection.txt")
-	if err != nil {
-		log.Fatal(err)
-		return nil
-	}
-
-	connectionString := string(data)
+func NewDBConnection(connectionString string) *sql.DB {
 
 	ps := fmt.Sprintf(connectionString)
 
