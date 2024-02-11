@@ -40,7 +40,7 @@ func main() {
 
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData: database.NewDBFromFile(file),
+		DatabaseData: database.NewDB(file),
 	}
 
 	r := chi.NewRouter()
@@ -50,6 +50,7 @@ func main() {
 	r.Use(logger.LoggingMiddleware)
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
+	r.Get(`/ping`, env.PingDBHandle)
 
 	r.Post(`/`, env.LongURLHandle)
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)

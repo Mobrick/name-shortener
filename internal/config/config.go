@@ -10,6 +10,7 @@ type Config struct {
     FlagShortURLBaseAddr string
     FlagLogLevel string
     FlagFileStoragePath string
+    FlagDBConnectionAddress string
 }
 
 func MakeConfig() *Config {
@@ -19,6 +20,7 @@ func MakeConfig() *Config {
 	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
 	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
     flag.StringVar(&config.FlagFileStoragePath, "f", "tmp/short-url-db.json", "path of file with saved URLs")
+    flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
 
 	flag.Parse()
 
@@ -36,6 +38,10 @@ func MakeConfig() *Config {
 
     if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
         config.FlagFileStoragePath = envFileStoragePath
+    }
+
+    if envDBConnectionAddress := os.Getenv("DATABASE_DSN"); envDBConnectionAddress != "" {
+        config.FlagDBConnectionAddress = envDBConnectionAddress
     }
 
     return config
