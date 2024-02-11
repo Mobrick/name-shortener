@@ -42,6 +42,7 @@ func main() {
 		ConfigStruct: cfg,
 		DatabaseData: database.NewDB(file),
 	}
+	defer env.DatabaseData.DatabaseConnection.Close()
 
 	r := chi.NewRouter()
 
