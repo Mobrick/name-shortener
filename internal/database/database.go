@@ -100,11 +100,8 @@ func NewDBFromFile(fileName string) DatabaseData {
 }
 
 func NewDBConnection(connectionString string) *sql.DB {
-
-	ps := fmt.Sprintf(connectionString)
-
 	// Закрывается в основном потоке
-	db, err := sql.Open("pgx", ps)
+	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		log.Fatal(err)
 		return nil
