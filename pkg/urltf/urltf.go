@@ -40,6 +40,7 @@ func encodeURL(longURL []byte, db database.DatabaseData, shortURLLength int) str
 		encodedHash := base64.URLEncoding.EncodeToString(hash)
 		newURL = encodedHash[:shortURLLength]
 
+		// TODO: сделать проверку есть ли такой адрес уже в бд а не в мапе, если работа идет с бд
 		if !db.Contains(newURL) {
 			break
 		}

@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 
@@ -119,13 +118,8 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 }
 
 func (dbData DatabaseData) Add(shortURL string, originalURL string) {
-	newRecord := models.URLRecord{
-		OriginalURL: originalURL,
-		ShortURL:    shortURL,
-		UUID:        uuid.New().String(),
-	}
-
-	dbData.DatabaseMap[shortURL] = originalURL
+	id := uuid.New().String()
+	newRecord := dbData.createRecordAndUpdateDBMap(originalURL, shortURL, id)
 
 	switch dbData.StorageType {
 	case SQLDB:
@@ -137,17 +131,13 @@ func (dbData DatabaseData) Add(shortURL string, originalURL string) {
 	}
 }
 
-func (dbData DatabaseData) SQLDBAdd(newRecord models.URLRecord) {
-	dbData.AddToSQLDB(newRecord)
-}
-
-func (dbData DatabaseData) AddToSQLDB(urlRecord models.URLRecord) {
+func (dbData DatabaseData) SQLDBAdd(urlRecord models.URLRecord) {
 	dbData.CreateURLRecordsTableIfNotExisits()
 
 	_, err := dbData.DatabaseConnection.Exec("INSERT INTO url_records (uuid, short_url, original_url)"+
 		" VALUES ($1, $2, $3)", urlRecord.UUID, urlRecord.ShortURL, urlRecord.OriginalURL)
 	if err != nil {
-		fmt.Println("Failed to insert a record:", err)
+		log.Fatal("Failed to insert a record: "+urlRecord.OriginalURL, err)
 		return
 	}
 }
@@ -182,4 +172,76 @@ func (dbData DatabaseData) Contains(shortUrl string) bool {
 func (dbData DatabaseData) PingDB() error {
 	err := dbData.DatabaseConnection.Ping()
 	return err
+}
+
+func (dbData DatabaseData) AddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+	switch dbData.StorageType {
+	case SQLDB:
+		dbData.SQLDBAddMany(shortURLRequestMap)
+	case File:
+		dbData.FileAddMany(shortURLRequestMap)
+	default:
+		dbData.LocalAddMany(shortURLRequestMap)
+	}
+}
+
+func (dbData DatabaseData) LocalAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+	for shortURL, record := range shortURLRequestMap {
+		newRecord := dbData.createRecordAndUpdateDBMap(record.OriginalURL, shortURL, record.CorrelationID)
+		dbData.LocalAdd(newRecord)
+	}
+}
+
+func (dbData DatabaseData) FileAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+	for shortURL, record := range shortURLRequestMap {
+		newRecord := dbData.createRecordAndUpdateDBMap(record.OriginalURL, shortURL, record.CorrelationID)
+		dbData.LocalAdd(newRecord)
+		filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
+	}
+}
+
+func (dbData DatabaseData) SQLDBAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+	// Создание списка всех записей
+	var sliceOfRecords []models.URLRecord
+	for shortURL, record := range shortURLRequestMap {
+		newRecord := dbData.createRecordAndUpdateDBMap(record.OriginalURL, shortURL, record.CorrelationID)
+		sliceOfRecords = append(sliceOfRecords, newRecord)
+	}
+
+	tx, err := dbData.DatabaseConnection.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare("INSERT INTO url_records (uuid, short_url, original_url)" +
+		" VALUES ($1, $2, $3)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
+	for _, record := range sliceOfRecords {
+		_, err := stmt.Exec(record.UUID, record.ShortURL, record.OriginalURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (dbData DatabaseData) createRecordAndUpdateDBMap(originalURL string, shortURL string, id string) models.URLRecord {
+	newRecord := models.URLRecord{
+		OriginalURL: originalURL,
+		ShortURL:    shortURL,
+		UUID:        id,
+	}
+
+	dbData.DatabaseMap[shortURL] = originalURL
+	return newRecord
 }

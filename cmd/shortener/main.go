@@ -51,6 +51,7 @@ func main() {
 
 	r.Post(`/`, env.LongURLHandle)
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)
+	r.Post(`/api/shorten/batch`, env.BatchHandler)
 
 	sugar.Infow(
 		"Starting server",
