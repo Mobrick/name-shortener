@@ -19,8 +19,8 @@ func MakeConfig() *Config {
 	flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
 	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
 	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
-//	flag.StringVar(&config.FlagFileStoragePath, "f", "tmp/short-url-db.json", "path of file with saved URLs")
-//	flag.StringVar(&config.FlagDBConnectionAddress, "d", "host=localhost user=postgres password=vbhjyjdrf dbname=URLRecords sslmode=disable", "database connection address")
+	flag.StringVar(&config.FlagFileStoragePath, "f", "tmp/short-url-db.json", "path of file with saved URLs")
+	flag.StringVar(&config.FlagDBConnectionAddress, "d", "host=localhost user=postgres password=vbhjyjdrf dbname=URLRecords sslmode=disable", "database connection address")
 
 	flag.Parse()
 
@@ -35,7 +35,7 @@ func MakeConfig() *Config {
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		config.FlagLogLevel = envLogLevel
 	}
-/*
+
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		config.FlagFileStoragePath = envFileStoragePath
 	}
@@ -43,6 +43,6 @@ func MakeConfig() *Config {
 	if envDBConnectionAddress := os.Getenv("DATABASE_DSN"); envDBConnectionAddress != "" {
 		config.FlagDBConnectionAddress = envDBConnectionAddress
 	}
-*/
+
 	return config
 }

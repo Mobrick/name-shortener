@@ -31,6 +31,8 @@ func main() {
 
 	cfg := config.MakeConfig()
 
+	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
+
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
 		DatabaseData: database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
