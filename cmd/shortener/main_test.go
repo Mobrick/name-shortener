@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
+	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -17,8 +19,14 @@ import (
 )
 
 func TestLongURLHandle(t *testing.T) {
+	file, err := filestorage.MakeFile("tmp/short-url-db-test.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
 	env := &handler.HandlerEnv{
-		DatabaseMap:  database.NewDBMap(),
+		DatabaseData: database.NewDBFromFile(file),
 		ConfigStruct: config.MakeConfig(),
 	}
 	shortURLLength := handler.ShortURLLength
@@ -74,8 +82,14 @@ func TestLongURLHandle(t *testing.T) {
 }
 
 func ShortenedURLHandle(t *testing.T) {
+	file, err := filestorage.MakeFile("tmp/short-url-db-test.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
 	env := &handler.HandlerEnv{
-		DatabaseMap: database.NewDBMap(),
+		DatabaseData: database.NewDBFromFile(file),
 	}
 	type want struct {
 		code     int
@@ -123,7 +137,7 @@ func ShortenedURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			env.DatabaseMap = test.db
+			env.DatabaseData.DatabaseMap = test.db
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()
 			requestContext.URLParams.Add("shortURL", test.request)

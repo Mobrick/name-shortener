@@ -1,5 +1,73 @@
 package database
 
-func NewDBMap() map[string]string {
-	return make(map[string]string)
+import (
+	"os"
+
+	"github.com/Mobrick/name-shortener/filestorage"
+	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/google/uuid"
+)
+
+type DatabaseData struct {
+	URLRecords  []models.URLRecord
+	DatabaseMap map[string]string
+	FileStorage *os.File
+}
+
+func (dbData DatabaseData) Get(shortURL string) (string, bool) {
+	location, ok := dbData.DatabaseMap[shortURL]
+	return location, ok
+}
+
+func NewDBFromFile(fileStorage *os.File) DatabaseData {
+	if fileStorage == nil {
+		return DatabaseData{
+			URLRecords:  make([]models.URLRecord, 0),
+			DatabaseMap: make(map[string]string),
+		}
+	}
+	urlRecords, err := filestorage.LoadURLRecords(fileStorage)
+	if err != nil {
+		panic(err)
+	}
+
+	dbMap, urlRecords := dbMapFromURLRecords(urlRecords)
+	databaseData := DatabaseData{
+		URLRecords:  urlRecords,
+		DatabaseMap: dbMap,
+		FileStorage: fileStorage,
+	}
+
+	return databaseData
+}
+
+func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []models.URLRecord) {
+	dbMap := make(map[string]string)
+	for _, urlRecord := range urlRecords {
+		dbMap[urlRecord.ShortURL] = urlRecord.OriginalURL
+	}
+	return dbMap, urlRecords
+}
+
+func (dbData DatabaseData) Add(shortURL string, originalURL string) {
+	newRecord := models.URLRecord{
+		OriginalURL: originalURL,
+		ShortURL:    shortURL,
+	}
+	newRecord.UUID = uuid.New().String()
+
+	dbData.URLRecords = append(dbData.URLRecords, newRecord)
+	dbData.DatabaseMap[shortURL] = originalURL
+
+	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
+}
+
+func (dbData DatabaseData) Contains(shortUrl string) bool {
+	dbMap := dbData.DatabaseMap
+
+	if _, ok := dbMap[string(shortUrl)]; !ok {
+		return false
+	} else {
+		return true
+	}
 }

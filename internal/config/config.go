@@ -8,6 +8,8 @@ import (
 type Config struct {
 	FlagRunAddr string
     FlagShortURLBaseAddr string
+    FlagLogLevel string
+    FlagFileStoragePath string
 }
 
 func MakeConfig() *Config {
@@ -15,6 +17,8 @@ func MakeConfig() *Config {
 
 	flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
 	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
+	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
+    flag.StringVar(&config.FlagFileStoragePath, "f", "tmp/short-url-db.json", "path of file with saved URLs")
 
 	flag.Parse()
 
@@ -24,6 +28,14 @@ func MakeConfig() *Config {
 
 	if envBaseAddr := os.Getenv("BASE_URL"); envBaseAddr != "" {
         config.FlagShortURLBaseAddr = envBaseAddr
+    }
+
+    if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+        config.FlagLogLevel = envLogLevel
+    }
+
+    if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
+        config.FlagFileStoragePath = envFileStoragePath
     }
 
     return config
