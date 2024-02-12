@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
-	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -19,16 +17,11 @@ import (
 )
 
 func TestLongURLHandle(t *testing.T) {
-	file, err := filestorage.MakeFile("tmp/short-url-db-test.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
 	env := &handler.HandlerEnv{
-		DatabaseData: database.NewDBFromFile(file),
+		DatabaseData: database.NewDBFromFile("tmp/short-url-db-test.json"),
 		ConfigStruct: config.MakeConfig(),
 	}
+	defer env.DatabaseData.FileStorage.Close()
 	shortURLLength := handler.ShortURLLength
 	type args struct {
 		res http.ResponseWriter
@@ -82,15 +75,11 @@ func TestLongURLHandle(t *testing.T) {
 }
 
 func ShortenedURLHandle(t *testing.T) {
-	file, err := filestorage.MakeFile("tmp/short-url-db-test.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
 
 	env := &handler.HandlerEnv{
-		DatabaseData: database.NewDBFromFile(file),
+		DatabaseData: database.NewDBFromFile("tmp/short-url-db-test.json"),
 	}
+	defer env.DatabaseData.FileStorage.Close()
 	type want struct {
 		code     int
 		location string
