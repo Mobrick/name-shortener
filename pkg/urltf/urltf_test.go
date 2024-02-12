@@ -1,21 +1,16 @@
 package urltf
 
 import (
-	"log"
 	"testing"
 
 	"github.com/Mobrick/name-shortener/database"
-	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_encodeURL(t *testing.T) {
-	file, err := filestorage.MakeFile("tmp/test.json")	
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	db := database.NewDBFromFile(file)
+	db := database.NewDBFromFile("tmp/test.json")
+	defer db.FileStorage.Close()
+
 	tests := []struct {
 		name            string
 		longURL         []byte

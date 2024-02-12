@@ -11,7 +11,6 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
-	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/logger"
@@ -32,17 +31,14 @@ func main() {
 
 	cfg := config.MakeConfig()
 
-	file, err := filestorage.MakeFile(cfg.FlagFileStoragePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
 
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData: database.NewDB(file, cfg.FlagDBConnectionAddress),
+		DatabaseData: database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
 	defer env.DatabaseData.DatabaseConnection.Close()
+	defer env.DatabaseData.FileStorage.Close()
 
 	r := chi.NewRouter()
 
@@ -83,6 +79,7 @@ func main() {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
 
-	file.Close()
+	env.DatabaseData.DatabaseConnection.Close()
+	env.DatabaseData.FileStorage.Close()
 	sugar.Infow("Server stopped")
 }
