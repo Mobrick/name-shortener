@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
-
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgerrcode"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/lib/pq"
 )
 
 const urlRecordsTableName = "url_records"
@@ -117,45 +118,68 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 	return dbMap, urlRecords
 }
 
-func (dbData DatabaseData) Add(shortURL string, originalURL string) {
+func (dbData DatabaseData) Add(shortURL string, originalURL string) string {
 	id := uuid.New().String()
 	newRecord := dbData.createRecordAndUpdateDBMap(originalURL, shortURL, id)
 
 	switch dbData.StorageType {
 	case SQLDB:
-		dbData.SQLDBAdd(newRecord)
+		return dbData.sqldbAdd(newRecord)
 	case File:
-		dbData.FileAdd(newRecord)
+		dbData.fileAdd(newRecord)
 	default:
-		dbData.LocalAdd(newRecord)
+		dbData.localAdd(newRecord)
 	}
+	return ""
 }
 
-func (dbData DatabaseData) SQLDBAdd(urlRecord models.URLRecord) {
-	dbData.CreateURLRecordsTableIfNotExisits()
+func (dbData DatabaseData) sqldbAdd(urlRecord models.URLRecord) string {
+	dbData.createURLRecordsTableIfNotExists()
 
-	_, err := dbData.DatabaseConnection.Exec("INSERT INTO url_records (uuid, short_url, original_url)"+
-		" VALUES ($1, $2, $3)", urlRecord.UUID, urlRecord.ShortURL, urlRecord.OriginalURL)
+	insertStmt, err := dbData.DatabaseConnection.Prepare("INSERT INTO url_records (uuid, short_url, original_url)" +
+		" VALUES ($1, $2, $3)")
 	if err != nil {
-		log.Fatal("Failed to insert a record: "+urlRecord.OriginalURL, err)
-		return
+		log.Fatal("Failed to prepare the SQL statement of: "+urlRecord.OriginalURL, err)
 	}
+
+	_, err = insertStmt.Exec(urlRecord.UUID, urlRecord.ShortURL, urlRecord.OriginalURL)
+
+	if err, ok := err.(*pq.Error); ok {
+		if err.Code == pgerrcode.UniqueViolation {
+			// TODO запрос существуещего сокращенного урл
+			return dbData.findExisitingShortURL(urlRecord.OriginalURL)
+		} else {
+			log.Fatal("Failed to insert a record: "+urlRecord.OriginalURL, err)
+		}
+	}
+
+	return ""
 }
 
-func (dbData DatabaseData) CreateURLRecordsTableIfNotExisits() {
-	_, err := dbData.DatabaseConnection.Exec("CREATE TABLE IF NOT EXISTS " + urlRecordsTableName + " (uuid VARCHAR(255) PRIMARY KEY, short_url VARCHAR(255) NOT NULL, original_url VARCHAR(255) NOT NULL)")
+func (dbData DatabaseData) findExisitingShortURL(originalURL string) string {
+	stmt, err := dbData.DatabaseConnection.Prepare("SELECT short_url FROM url_records WHERE original_url = $1")
+	if err != nil {
+		log.Fatal("Failed to prepare the statement of getting existing shortURL:  "+originalURL, err)
+	}
+	var shortURL string
+	err = stmt.QueryRow(originalURL).Scan(&shortURL)
+	return shortURL
+}
+
+func (dbData DatabaseData) createURLRecordsTableIfNotExists() {
+	_, err := dbData.DatabaseConnection.Exec("CREATE TABLE IF NOT EXISTS " + urlRecordsTableName + " (uuid VARCHAR(255) PRIMARY KEY, short_url VARCHAR(255) NOT NULL, original_url VARCHAR(255) NOT NULL UNIQUE)")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (dbData DatabaseData) FileAdd(newRecord models.URLRecord) {
-	dbData.LocalAdd(newRecord)
+func (dbData DatabaseData) fileAdd(newRecord models.URLRecord) {
+	dbData.localAdd(newRecord)
 	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
 }
 
-func (dbData DatabaseData) LocalAdd(newRecord models.URLRecord) {
+func (dbData DatabaseData) localAdd(newRecord models.URLRecord) {
 	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 }
 
@@ -177,30 +201,30 @@ func (dbData DatabaseData) PingDB() error {
 func (dbData DatabaseData) AddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
 	switch dbData.StorageType {
 	case SQLDB:
-		dbData.SQLDBAddMany(shortURLRequestMap)
+		dbData.sqldbAddMany(shortURLRequestMap)
 	case File:
-		dbData.FileAddMany(shortURLRequestMap)
+		dbData.fileAddMany(shortURLRequestMap)
 	default:
-		dbData.LocalAddMany(shortURLRequestMap)
+		dbData.localAddMany(shortURLRequestMap)
 	}
 }
 
-func (dbData DatabaseData) LocalAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+func (dbData DatabaseData) localAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
 	for shortURL, record := range shortURLRequestMap {
 		newRecord := dbData.createRecordAndUpdateDBMap(record.OriginalURL, shortURL, record.CorrelationID)
-		dbData.LocalAdd(newRecord)
+		dbData.localAdd(newRecord)
 	}
 }
 
-func (dbData DatabaseData) FileAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+func (dbData DatabaseData) fileAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
 	for shortURL, record := range shortURLRequestMap {
 		newRecord := dbData.createRecordAndUpdateDBMap(record.OriginalURL, shortURL, record.CorrelationID)
-		dbData.LocalAdd(newRecord)
+		dbData.localAdd(newRecord)
 		filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
 	}
 }
 
-func (dbData DatabaseData) SQLDBAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
+func (dbData DatabaseData) sqldbAddMany(shortURLRequestMap map[string]models.BatchRequestURL) {
 	// Создание списка всех записей
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
