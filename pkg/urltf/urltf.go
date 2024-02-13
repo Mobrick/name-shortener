@@ -9,12 +9,10 @@ import (
 	"github.com/Mobrick/name-shortener/database"
 )
 
-func MakeShortAddressAndURL(shortAddress string, db database.DatabaseData, urlToShorten []byte, req *http.Request, shortURLLength int) (string, string) {
+func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Request) string {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
 	}
-
-	shortURL := encodeURL(urlToShorten, db, shortURLLength)
 
 	if len(shortAddress) != 0 {
 		shortAddress += shortURL
@@ -24,10 +22,10 @@ func MakeShortAddressAndURL(shortAddress string, db database.DatabaseData, urlTo
 			shortAddress = "http://" + shortAddress
 		}
 	}
-	return shortAddress, shortURL
+	return shortAddress
 }
 
-func encodeURL(longURL []byte, db database.DatabaseData, shortURLLength int) string {
+func EncodeURL(longURL []byte, db database.DatabaseData, shortURLLength int) string {
 	var newURL string
 
 	for {
@@ -40,7 +38,6 @@ func encodeURL(longURL []byte, db database.DatabaseData, shortURLLength int) str
 		encodedHash := base64.URLEncoding.EncodeToString(hash)
 		newURL = encodedHash[:shortURLLength]
 
-		// TODO: сделать проверку есть ли такой адрес уже в бд а не в мапе, если работа идет с бд
 		if !db.Contains(newURL) {
 			break
 		}

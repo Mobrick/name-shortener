@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 
@@ -9,8 +10,8 @@ import (
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/lib/pq"
 )
 
 const urlRecordsTableName = "url_records"
@@ -136,20 +137,23 @@ func (dbData DatabaseData) Add(shortURL string, originalURL string) string {
 func (dbData DatabaseData) sqldbAdd(urlRecord models.URLRecord) string {
 	dbData.createURLRecordsTableIfNotExists()
 
+	originalURL := urlRecord.OriginalURL
+
 	insertStmt, err := dbData.DatabaseConnection.Prepare("INSERT INTO url_records (uuid, short_url, original_url)" +
 		" VALUES ($1, $2, $3)")
 	if err != nil {
-		log.Fatal("Failed to prepare the SQL statement of: "+urlRecord.OriginalURL, err)
+		log.Fatal("Failed to prepare the SQL statement of: "+originalURL, err)
 	}
 
-	_, err = insertStmt.Exec(urlRecord.UUID, urlRecord.ShortURL, urlRecord.OriginalURL)
+	_, err = insertStmt.Exec(urlRecord.UUID, urlRecord.ShortURL, originalURL)
 
-	if err, ok := err.(*pq.Error); ok {
-		if err.Code == pgerrcode.UniqueViolation {
-			// TODO запрос существуещего сокращенного урл
-			return dbData.findExisitingShortURL(urlRecord.OriginalURL)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			log.Printf("url %s already in database", originalURL)
+			return dbData.findExisitingShortURL(originalURL)
 		} else {
-			log.Fatal("Failed to insert a record: "+urlRecord.OriginalURL, err)
+			log.Fatal("Failed to insert a record: "+originalURL, err)
 		}
 	}
 

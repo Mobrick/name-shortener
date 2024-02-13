@@ -48,12 +48,14 @@ func processMultipleURLRecords(env HandlerEnv, urlsToShorten []models.BatchReque
 
 	// Creating shorten urls for each record in request
 	for _, originalURLRecord := range urlsToShorten {
-		shortAddress, shortURL := urltf.MakeShortAddressAndURL(hostAndPathPart, db, []byte(originalURLRecord.OriginalURL), req, ShortURLLength)
+		encodedURL := urltf.EncodeURL([]byte(originalURLRecord.OriginalURL), db, ShortURLLength)
+		shortAddress := urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req)
+
 		responseRecord := models.BatchResponseURL{
 			CorrelationID: originalURLRecord.CorrelationID,
 			ShortURL:      shortAddress,
 		}
-		shortURLRequestMap[shortURL] = originalURLRecord
+		shortURLRequestMap[encodedURL] = originalURLRecord
 		responseRecords = append(responseRecords, responseRecord)
 	}
 

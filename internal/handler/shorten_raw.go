@@ -18,16 +18,19 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 	db := env.DatabaseData
-	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, db, urlToShorten, req, ShortURLLength)
-	existingShortURL := db.Add(shortURL, string(urlToShorten))
+
+	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
+	encodedURL := urltf.EncodeURL(urlToShorten, db, ShortURLLength)
+
+	existingShortURL := db.Add(encodedURL, string(urlToShorten))
 
 	var resultAddress string
 	var status int
 	if len(existingShortURL) != 0 {
-		resultAddress = existingShortURL
+		resultAddress = urltf.MakeResultShortenedURL(hostAndPathPart, existingShortURL, req)
 		status = http.StatusConflict
 	} else {
-		resultAddress = shortAddress
+		resultAddress = urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req)
 		status = http.StatusCreated
 	}
 

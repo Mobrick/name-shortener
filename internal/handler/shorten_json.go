@@ -32,22 +32,25 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 
-	shortAddress, shortURL := urltf.MakeShortAddressAndURL(hostAndPathPart, db, urlToShorten, req, ShortURLLength)
-	existingShortURL := db.Add(shortURL, string(urlToShorten))
+	encodedURL := urltf.EncodeURL(urlToShorten, db, ShortURLLength)
+	
+	existingShortURL := db.Add(encodedURL, string(urlToShorten))
 
 	var response models.Response
 	var status int
 	if (len(existingShortURL) != 0)	{
 		response = models.Response{
-			Result: existingShortURL,
+			Result: urltf.MakeResultShortenedURL(hostAndPathPart, existingShortURL, req),
 		}
 		status = http.StatusConflict
 	} else {
 		response = models.Response{
-			Result: shortAddress,
+			Result: urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req),
 		}
 		status = http.StatusCreated
 	}
+
+	
 	resp, err := json.Marshal(response)
 	if err != nil {
 		logger.Log.Debug("could not marshal response", zap.String("Response result", response.Result))
