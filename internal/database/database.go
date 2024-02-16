@@ -139,13 +139,10 @@ func (dbData DatabaseData) sqldbAdd(urlRecord models.URLRecord) string {
 
 	originalURL := urlRecord.OriginalURL
 
-	insertStmt, err := dbData.DatabaseConnection.Prepare("INSERT INTO url_records (uuid, short_url, original_url)" +
-		" VALUES ($1, $2, $3)")
-	if err != nil {
-		log.Fatal("Failed to prepare the SQL statement of: "+originalURL, err)
-	}
+	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
+		" VALUES ($1, $2, $3)"
 
-	_, err = insertStmt.Exec(urlRecord.UUID, urlRecord.ShortURL, originalURL)
+	_, err := dbData.DatabaseConnection.Exec(insertStmt, urlRecord.UUID, urlRecord.ShortURL, originalURL)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -171,7 +168,11 @@ func (dbData DatabaseData) findExisitingShortURL(originalURL string) string {
 }
 
 func (dbData DatabaseData) createURLRecordsTableIfNotExists() {
-	_, err := dbData.DatabaseConnection.Exec("CREATE TABLE IF NOT EXISTS " + urlRecordsTableName + " (uuid VARCHAR(255) PRIMARY KEY, short_url VARCHAR(255) NOT NULL, original_url VARCHAR(255) NOT NULL UNIQUE)")
+	_, err := dbData.DatabaseConnection.Exec(
+		"CREATE TABLE IF NOT EXISTS " + urlRecordsTableName +
+			` (uuid TEXT PRIMARY KEY, 
+			short_url TEXT NOT NULL, 
+			original_url TEXT NOT NULL UNIQUE)`)
 
 	if err != nil {
 		log.Fatal(err)
