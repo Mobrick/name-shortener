@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 )
 
 func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	var buf bytes.Buffer
 
 	// читаем тело запроса
@@ -26,7 +28,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	responseRecords := processMultipleURLRecords(env, urls, req)
+	responseRecords := processMultipleURLRecords(ctx, env, urls, req)
 
 	resp, err := json.Marshal(responseRecords)
 	if err != nil {
@@ -40,15 +42,15 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request) []models.BatchResponseURL {
+func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request) []models.BatchResponseURL {
 	var responseRecords []models.BatchResponseURL
-	db := env.DatabaseData
+	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 	shortURLRequestMap := make(map[string]models.BatchRequestURL)
 
 	// Creating shorten urls for each record in request
 	for _, originalURLRecord := range urlsToShorten {
-		encodedURL := urltf.EncodeURL([]byte(originalURLRecord.OriginalURL), db, ShortURLLength)
+		encodedURL := urltf.EncodeURL([]byte(originalURLRecord.OriginalURL), ShortURLLength)
 		shortAddress := urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req)
 
 		responseRecord := models.BatchResponseURL{
@@ -59,7 +61,7 @@ func processMultipleURLRecords(env HandlerEnv, urlsToShorten []models.BatchReque
 		responseRecords = append(responseRecords, responseRecord)
 	}
 
-	db.AddMany(shortURLRequestMap)
+	storage.AddMany(ctx, shortURLRequestMap)
 
 	return responseRecords
 }

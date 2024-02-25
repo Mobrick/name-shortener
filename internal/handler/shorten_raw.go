@@ -8,6 +8,8 @@ import (
 )
 
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
 	if err != nil {
 		res.Write([]byte(err.Error()))
@@ -17,12 +19,12 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	db := env.DatabaseData
+	storage := env.Storage
 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
-	encodedURL := urltf.EncodeURL(urlToShorten, db, ShortURLLength)
+	encodedURL := urltf.EncodeURL(urlToShorten, ShortURLLength)
 
-	existingShortURL := db.Add(encodedURL, string(urlToShorten))
+	existingShortURL := storage.Add(ctx, encodedURL, string(urlToShorten))
 
 	var resultAddress string
 	var status int

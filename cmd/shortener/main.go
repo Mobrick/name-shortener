@@ -32,13 +32,14 @@ func main() {
 	cfg := config.MakeConfig()
 
 	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
+	// Определение типа стораджа и создание соотвествующего объекта чтобы потом положить в хендлер
 
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData: database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
+		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
-	defer env.DatabaseData.DatabaseConnection.Close()
-	defer env.DatabaseData.FileStorage.Close()
+	// Добавить Close в интерфейс и закрвать через интерфейс
+	defer env.Storage.Close()
 
 	r := chi.NewRouter()
 
@@ -80,7 +81,6 @@ func main() {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
 
-	env.DatabaseData.DatabaseConnection.Close()
-	env.DatabaseData.FileStorage.Close()
+	env.Storage.Close()
 	sugar.Infow("Server stopped")
 }

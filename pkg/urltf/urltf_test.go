@@ -9,7 +9,7 @@ import (
 
 func Test_encodeURL(t *testing.T) {
 	db := database.NewDBFromFile("tmp/test.json")
-	defer db.FileStorage.Close()
+	defer db.Close()
 
 	tests := []struct {
 		name            string
@@ -35,7 +35,7 @@ func Test_encodeURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newURL := EncodeURL(tt.longURL, db, tt.wantURLLength)
+			newURL := EncodeURL(tt.longURL, tt.wantURLLength)
 			assert.Equal(t, tt.wantURLLength, len(newURL))
 		})
 	}

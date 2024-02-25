@@ -18,10 +18,10 @@ import (
 
 func TestLongURLHandle(t *testing.T) {
 	env := &handler.HandlerEnv{
-		DatabaseData: database.NewDBFromFile("tmp/short-url-db-test.json"),
+		Storage:      database.NewDBFromFile("tmp/short-url-db-test.json"),
 		ConfigStruct: config.MakeConfig(),
 	}
-	defer env.DatabaseData.FileStorage.Close()
+	defer env.Storage.Close()
 	shortURLLength := handler.ShortURLLength
 	type args struct {
 		res http.ResponseWriter
@@ -77,9 +77,9 @@ func TestLongURLHandle(t *testing.T) {
 func ShortenedURLHandle(t *testing.T) {
 
 	env := &handler.HandlerEnv{
-		DatabaseData: database.NewDBFromFile("tmp/short-url-db-test.json"),
+		Storage: database.NewDBFromFile("tmp/short-url-db-test.json"),
 	}
-	defer env.DatabaseData.FileStorage.Close()
+	defer env.Storage.Close()
 	type want struct {
 		code     int
 		location string
@@ -126,7 +126,9 @@ func ShortenedURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			env.DatabaseData.DatabaseMap = test.db
+			for k, v := range test.db {
+				env.Storage.Add(context.Background(), k, v)
+			}
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()
 			requestContext.URLParams.Add("shortURL", test.request)
