@@ -29,10 +29,10 @@ type DatabaseData struct {
 }
 
 type Storage interface {
-	Add(context.Context, string, string) string
-	AddMany(context.Context, map[string]models.BatchRequestURL)
+	Add(context.Context, string, string) (string, error)
+	AddMany(context.Context, map[string]models.BatchRequestURL) error
 	PingDB() error
-	Get(context.Context, string) (string, bool)
+	Get(context.Context, string) (string, bool, error)
 	Close()
 }
 

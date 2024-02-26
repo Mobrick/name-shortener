@@ -24,7 +24,7 @@ func (dbData PostgreDB) PingDB() error {
 	return err
 }
 
-func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) {
+func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) error {
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
 		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID)
@@ -33,7 +33,7 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 
 	tx, err := dbData.DatabaseConnection.Begin()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer tx.Rollback()
@@ -44,52 +44,63 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 	for _, record := range sliceOfRecords {
 		_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, record.UUID, record.ShortURL, record.OriginalURL)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string) string {
+func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string) (string, error) {
 	id := uuid.New().String()
 	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id)
 
-	dbData.createURLRecordsTableIfNotExists(ctx)
+	err := dbData.createURLRecordsTableIfNotExists(ctx)
+	if err != nil {
+		return "", err
+	}
 
 	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
 		" VALUES ($1, $2, $3)"
 
-	_, err := dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL)
+	_, err = dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			log.Printf("url %s already in database", originalURL)
-			return dbData.findExisitingShortURL(ctx, originalURL)
+			exisitingURL, findErr := dbData.findExisitingShortURL(ctx, originalURL)
+			if findErr != nil{
+				return "", findErr
+			}
+			return exisitingURL ,nil
 		} else {
-			log.Fatal("Failed to insert a record: "+originalURL, err)
+			log.Printf("Failed to insert a record: "+originalURL)
+			return "", err
 		}
 	}
 
-	return ""
+	return "", nil
 }
 
-func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool) {
+func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
 	var location string
 
 	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url FROM url_records WHERE short_url = $1", shortURL)
 	err := row.Scan(&location)
 	if err == sql.ErrNoRows {
-		return location, false
+		return location, false, nil
+	} else if err != nil {
+		return location, false, err
 	}
-	return location, true
+	return location, true, nil
 }
 
-func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) {
+func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) error {
 	_, err := dbData.DatabaseConnection.ExecContext(ctx,
 		"CREATE TABLE IF NOT EXISTS "+urlRecordsTableName+
 			` (uuid TEXT PRIMARY KEY, 
@@ -97,18 +108,20 @@ func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) {
 			original_url TEXT NOT NULL UNIQUE)`)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL string) string {
+func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL string) (string, error) {
 	stmt := "SELECT short_url FROM url_records WHERE original_url = $1"
 	var shortURL string
 	err := dbData.DatabaseConnection.QueryRowContext(ctx, stmt, originalURL).Scan(&shortURL)
 	if err != nil {
-		log.Fatal("Failed to find existing shotened url for this: "+originalURL, err)
+		log.Printf("Failed to find existing shotened url for this: "+originalURL)
+		return "", err
 	}
-	return shortURL
+	return shortURL, nil
 }
 
 func (dbData PostgreDB) Close() {

@@ -4,7 +4,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Mobrick/name-shortener/logger"
 	"github.com/Mobrick/name-shortener/urltf"
+	"go.uber.org/zap"
 )
 
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
@@ -22,10 +24,18 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 	storage := env.Storage
 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
-	encodedURL := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	if err != nil {
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 
-	existingShortURL := storage.Add(ctx, encodedURL, string(urlToShorten))
-
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	if err != nil {
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	var resultAddress string
 	var status int
 	if len(existingShortURL) != 0 {

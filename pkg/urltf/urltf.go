@@ -23,17 +23,17 @@ func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Requ
 	return shortAddress
 }
 
-func EncodeURL(longURL []byte, shortURLLength int) string {
+func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 	var newURL string
 
 	hash := make([]byte, shortURLLength)
 	_, err := rand.Read(hash)
 	if err != nil {
-		panic(err)
+		return newURL, err
 	}
 
 	encodedHash := base64.URLEncoding.EncodeToString(hash)
 	newURL = encodedHash[:shortURLLength]
 	
-	return newURL
+	return newURL, nil
 }

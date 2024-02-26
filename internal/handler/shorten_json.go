@@ -34,9 +34,18 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 
-	encodedURL := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	if err != nil {
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 
-	existingShortURL := storage.Add(ctx, encodedURL, string(urlToShorten))
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	if err != nil {
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	var response models.Response
 	var status int

@@ -1,6 +1,7 @@
 package urltf
 
 import (
+	"log"
 	"testing"
 
 	"github.com/Mobrick/name-shortener/database"
@@ -35,7 +36,10 @@ func Test_encodeURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newURL := EncodeURL(tt.longURL, tt.wantURLLength)
+			newURL, err := EncodeURL(tt.longURL, tt.wantURLLength)
+			if err != nil {
+				log.Printf("encode error %v", err)
+			}
 			assert.Equal(t, tt.wantURLLength, len(newURL))
 		})
 	}
