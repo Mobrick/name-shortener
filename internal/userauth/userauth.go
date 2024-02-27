@@ -73,6 +73,7 @@ func createNewCookie() http.Cookie {
 	cookie := http.Cookie{
 		Name:     "auth_token",
 		Value:    tokenString,
+		Path:     "/",
 		MaxAge:   3600 * 3,
 		HttpOnly: true,
 		Secure:   true,
