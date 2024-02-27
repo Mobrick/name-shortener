@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const TOKEN_EXP = time.Hour * 3
-const SECRET_KEY = "tratatata"
+const TokenExp = time.Hour * 3
+const SecretKey = "tratatata"
 
 type Claims struct {
 	jwt.RegisteredClaims
@@ -37,20 +37,18 @@ func cookieIsValid(r *http.Request) bool {
 
 	// в случае если кука есть проверяем что она проходит проверку подлинности
 	token := cookie.Value
-	_, ok := GetUserId(token)
+	_, ok := GetUserID(token)
 	return ok
 }
 
-
-
-func GetUserId(tokenString string) (string, bool) {
+func GetUserID(tokenString string) (string, bool) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
-			return []byte(SECRET_KEY), nil
+			return []byte(SecretKey), nil
 		})
 	if err != nil {
 		return "", false
@@ -83,21 +81,21 @@ func createNewCookie() http.Cookie {
 }
 
 func buildJWTString() (string, error) {
-	newId := uuid.New().String()
+	newID := uuid.New().String()
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// когда создан токен
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
 		},
 		// собственное утверждение
 
-		UserID: newId,
+		UserID: newID,
 		// TODO: тут добавить данные по сокращенным урл
 	})
 
 	// создаём строку токена
-	tokenString, err := token.SignedString([]byte(SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(SecretKey))
 	if err != nil {
 		return "", err
 	}

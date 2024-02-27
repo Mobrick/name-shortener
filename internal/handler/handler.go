@@ -12,7 +12,7 @@ import (
 type HandlerEnv struct {
 	//DatabaseData database.DatabaseData
 	ConfigStruct *config.Config
-	Storage database.Storage
+	Storage      database.Storage
 }
 
 const (
@@ -27,7 +27,7 @@ func GetUserIdFromRequest(req *http.Request) (string, bool) {
 	}
 
 	token := cookie.Value
-	userId, ok := userauth.GetUserId(token)
+	userId, ok := userauth.GetUserID(token)
 	if !ok {
 		log.Printf("invalid token")
 		return "", false
