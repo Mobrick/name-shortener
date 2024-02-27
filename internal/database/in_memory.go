@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
@@ -41,11 +42,10 @@ func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[st
 }
 
 func (dbData InMemoryDB) Close() {
-	return
 }
 
-func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string) ([]models.SimpleURLRecord, error) {
+func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
-	usersUrls := GetUrlsCreatedByUser(urlRecords, userId)
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
 }

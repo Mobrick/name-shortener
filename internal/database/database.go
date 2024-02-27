@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/urltf"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -33,7 +35,7 @@ type Storage interface {
 	AddMany(context.Context, map[string]models.BatchRequestURL, string) error
 	PingDB() error
 	Get(context.Context, string) (string, bool, error)
-	GetUrlsByUserId(context.Context, string) ([]models.SimpleURLRecord, error)
+	GetUrlsByUserId(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
 	Close()
 }
 
@@ -109,12 +111,12 @@ func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, sho
 	return newRecord
 }
 
-func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userId string ) []models.SimpleURLRecord {
+func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userId string, hostAndPathPart string, req *http.Request) []models.SimpleURLRecord {
 	var usersUrls []models.SimpleURLRecord
 	for _, urlRecord := range urlRecords {
 		if urlRecord.UserID == userId {
-			usersUrl := models.SimpleURLRecord {
-				ShortURL: urlRecord.ShortURL,
+			usersUrl := models.SimpleURLRecord{
+				ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, urlRecord.ShortURL, req),
 				OriginalURL: urlRecord.OriginalURL,
 			}
 			usersUrls = append(usersUrls, usersUrl)

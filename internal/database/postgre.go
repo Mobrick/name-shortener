@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/urltf"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -129,7 +131,7 @@ func (dbData PostgreDB) Close() {
 	dbData.DatabaseConnection.Close()
 }
 
-func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string) ([]models.SimpleURLRecord, error) {
+func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	var usersUrls []models.SimpleURLRecord
 	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1"
 	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userId)
@@ -144,7 +146,7 @@ func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string) ([]m
 		}
 
 		usersUrl := models.SimpleURLRecord{
-			ShortURL:    shortURL,
+			ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, shortURL, req),
 			OriginalURL: originalURL,
 		}
 		usersUrls = append(usersUrls, usersUrl)

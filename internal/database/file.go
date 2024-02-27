@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"net/http"
 	"os"
 
 	"github.com/Mobrick/name-shortener/filestorage"
@@ -49,8 +50,8 @@ func (dbData FileDB) Close() {
 	dbData.FileStorage.Close()
 }
 
-func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string) ([]models.SimpleURLRecord, error) {
+func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
-	usersUrls := GetUrlsCreatedByUser(urlRecords, userId)
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
 }
