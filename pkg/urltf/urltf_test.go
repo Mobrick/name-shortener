@@ -4,14 +4,10 @@ import (
 	"log"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/database"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_encodeURL(t *testing.T) {
-	db := database.NewDBFromFile("tmp/test.json")
-	defer db.Close()
-
 	tests := []struct {
 		name            string
 		longURL         []byte

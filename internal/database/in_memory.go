@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
@@ -24,22 +25,27 @@ func (dbData InMemoryDB) Get(ctx context.Context, shortURL string) (string, bool
 	return location, ok, nil
 }
 
-func (dbData *InMemoryDB) Add(ctx context.Context, shortURL string, originalURL string) (string, error) {
+func (dbData *InMemoryDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
 	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 
 	return "", nil
 }
 
-func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) error {
+func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
 		dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	}
 	return nil
 }
 
 func (dbData InMemoryDB) Close() {
-	return
+}
+
+func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+	urlRecords := dbData.URLRecords
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
+	return usersUrls, nil
 }
