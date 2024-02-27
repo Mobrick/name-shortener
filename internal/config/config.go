@@ -20,7 +20,7 @@ func MakeConfig() *Config {
 	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
 	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
 	flag.StringVar(&config.FlagFileStoragePath, "f", "", "path of file with saved URLs")
-	flag.StringVar(&config.FlagDBConnectionAddress, "d", "host=localhost user=postgres password=vbhjyjdrf dbname=URLRecords sslmode=disable", "database connection address")
+	flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
 
 	flag.Parse()
 
