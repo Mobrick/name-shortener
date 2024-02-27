@@ -26,9 +26,9 @@ func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, er
 	return location, ok, nil
 }
 
-func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string) (string, error) {
+func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
 
 	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
@@ -36,9 +36,9 @@ func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL stri
 	return "", nil
 }
 
-func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) error {
+func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
 		dbData.URLRecords = append(dbData.URLRecords, newRecord)
 		filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
 	}
@@ -47,4 +47,10 @@ func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string
 
 func (dbData FileDB) Close() {
 	dbData.FileStorage.Close()
+}
+
+func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string) ([]models.SimpleURLRecord, error) {
+	urlRecords := dbData.URLRecords
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userId)
+	return usersUrls, nil
 }

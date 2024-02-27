@@ -24,10 +24,10 @@ func (dbData PostgreDB) PingDB() error {
 	return err
 }
 
-func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) error {
+func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
 		sliceOfRecords = append(sliceOfRecords, newRecord)
 	}
 
@@ -38,11 +38,11 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 
 	defer tx.Rollback()
 
-	stmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
-		" VALUES ($1, $2, $3)"
+	stmt := "INSERT INTO url_records (uuid, short_url, original_url, user_id)" +
+		" VALUES ($1, $2, $3, $4)"
 
 	for _, record := range sliceOfRecords {
-		_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, record.UUID, record.ShortURL, record.OriginalURL)
+		_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, record.UUID, record.ShortURL, record.OriginalURL, record.UserID)
 		if err != nil {
 			return err
 		}
@@ -55,31 +55,31 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 	return nil
 }
 
-func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string) (string, error) {
+func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
 
 	err := dbData.createURLRecordsTableIfNotExists(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
-		" VALUES ($1, $2, $3)"
+	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url, user_id)" +
+		" VALUES ($1, $2, $3, $4)"
 
-	_, err = dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL)
+	_, err = dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL, newRecord.UserID)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			log.Printf("url %s already in database", originalURL)
 			exisitingURL, findErr := dbData.findExisitingShortURL(ctx, originalURL)
-			if findErr != nil{
+			if findErr != nil {
 				return "", findErr
 			}
-			return exisitingURL ,nil
+			return exisitingURL, nil
 		} else {
-			log.Printf("Failed to insert a record: "+originalURL)
+			log.Printf("Failed to insert a record: " + originalURL)
 			return "", err
 		}
 	}
@@ -105,7 +105,8 @@ func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) er
 		"CREATE TABLE IF NOT EXISTS "+urlRecordsTableName+
 			` (uuid TEXT PRIMARY KEY, 
 			short_url TEXT NOT NULL, 
-			original_url TEXT NOT NULL UNIQUE)`)
+			original_url TEXT NOT NULL UNIQUE)
+			user_id TEXT NOT NULL`)
 
 	if err != nil {
 		return err
@@ -118,7 +119,7 @@ func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL s
 	var shortURL string
 	err := dbData.DatabaseConnection.QueryRowContext(ctx, stmt, originalURL).Scan(&shortURL)
 	if err != nil {
-		log.Printf("Failed to find existing shotened url for this: "+originalURL)
+		log.Printf("Failed to find existing shotened url for this: " + originalURL)
 		return "", err
 	}
 	return shortURL, nil
@@ -126,4 +127,29 @@ func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL s
 
 func (dbData PostgreDB) Close() {
 	dbData.DatabaseConnection.Close()
+}
+
+func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string) ([]models.SimpleURLRecord, error) {
+	var usersUrls []models.SimpleURLRecord
+	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1"
+	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userId)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var shortURL, originalURL string
+		err := rows.Scan(&shortURL, &originalURL)
+		if err != nil {
+			return nil, err
+		}
+
+		usersUrl := models.SimpleURLRecord{
+			ShortURL:    shortURL,
+			OriginalURL: originalURL,
+		}
+		usersUrls = append(usersUrls, usersUrl)
+	}
+
+	defer rows.Close()
+	return usersUrls, nil
 }

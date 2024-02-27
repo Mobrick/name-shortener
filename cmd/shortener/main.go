@@ -49,6 +49,7 @@ func main() {
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
 	r.Get(`/ping`, env.PingDBHandle)
+	r.Get(`/api/user/urls`, env.UserUrlsHandler)
 
 	r.Post(`/`, env.LongURLHandle)
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)

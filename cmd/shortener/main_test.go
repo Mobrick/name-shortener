@@ -58,6 +58,7 @@ func TestLongURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			
 			request := test.request
 			w := httptest.NewRecorder()
 			env.LongURLHandle(w, request)
@@ -127,7 +128,7 @@ func ShortenedURLHandle(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for k, v := range test.db {
-				env.Storage.Add(context.Background(), k, v)
+				env.Storage.Add(context.Background(), k, v, "")
 			}
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()

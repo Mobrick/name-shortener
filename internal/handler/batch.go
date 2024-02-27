@@ -13,6 +13,9 @@ import (
 
 func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
+
+	userId, _ := GetUserIdFromRequest(req)
+
 	var buf bytes.Buffer
 
 	// читаем тело запроса
@@ -28,9 +31,9 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req)
+	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req, userId)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging")		
+		logger.Log.Debug("could not copmplete url storaging")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -47,7 +50,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request) ([]models.BatchResponseURL, error) {
+func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request, userId string) ([]models.BatchResponseURL, error) {
 	var responseRecords []models.BatchResponseURL
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
@@ -69,7 +72,7 @@ func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorte
 		responseRecords = append(responseRecords, responseRecord)
 	}
 
-	err := storage.AddMany(ctx, shortURLRequestMap)
+	err := storage.AddMany(ctx, shortURLRequestMap, userId)
 	if err != nil {
 		return nil, err
 	}
