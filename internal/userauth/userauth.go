@@ -21,7 +21,11 @@ type Claims struct {
 func CookieMiddleware(h http.Handler) http.Handler {
 	cookieFn := func(w http.ResponseWriter, r *http.Request) {
 		if !cookieIsValid(r) {
-			cookie := createNewCookie()
+			cookie, err := createNewCookie()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			http.SetCookie(w, &cookie)
 		}
 		h.ServeHTTP(w, r)
@@ -64,10 +68,10 @@ func GetUserID(tokenString string) (string, bool) {
 	return claims.UserID, true
 }
 
-func createNewCookie() http.Cookie {
+func createNewCookie() (http.Cookie, error) {
 	tokenString, err := buildJWTString()
 	if err != nil {
-		log.Fatal(err)
+		return http.Cookie{}, err
 	}
 	// создание новой куки для юзера если такой куки не существует или она не проходит проверку подлинности
 	cookie := http.Cookie{
@@ -76,10 +80,10 @@ func createNewCookie() http.Cookie {
 		Path:     "/",
 		MaxAge:   3600 * 3,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 	}
 
-	return cookie
+	return cookie, nil
 }
 
 func buildJWTString() (string, error) {
@@ -93,7 +97,6 @@ func buildJWTString() (string, error) {
 		// собственное утверждение
 
 		UserID: newID,
-		// TODO: тут добавить данные по сокращенным урл
 	})
 
 	// создаём строку токена
