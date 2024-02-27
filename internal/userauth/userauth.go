@@ -26,6 +26,7 @@ func CookieMiddleware(h http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			r.AddCookie(&cookie)
 			http.SetCookie(w, &cookie)
 		}
 		h.ServeHTTP(w, r)

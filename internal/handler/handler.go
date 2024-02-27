@@ -22,9 +22,9 @@ const (
 func GetUserIdFromRequest(req *http.Request) (string, bool) {
 	cookie, err := req.Cookie("auth_token")
 	if err != nil {
-		log.Printf(err.Error())
+		log.Printf("no cookie found. " + err.Error())
 		return "", false
-	}
+	}	
 
 	token := cookie.Value
 	userId, ok := userauth.GetUserID(token)
