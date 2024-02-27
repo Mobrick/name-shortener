@@ -26,7 +26,7 @@ func (env HandlerEnv) UserUrlsHandler(res http.ResponseWriter, req *http.Request
 	}
 
 	if len(urls) == 0 {
-		res.WriteHeader(http.StatusNoContent)
+		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
