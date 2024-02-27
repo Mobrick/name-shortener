@@ -105,7 +105,7 @@ func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) er
 		"CREATE TABLE IF NOT EXISTS "+urlRecordsTableName+
 			` (uuid TEXT PRIMARY KEY, 
 			short_url TEXT NOT NULL, 
-			original_url TEXT NOT NULL UNIQUE
+			original_url TEXT NOT NULL UNIQUE,
 			user_id TEXT NOT NULL)`)
 
 	if err != nil {

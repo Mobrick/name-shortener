@@ -13,6 +13,7 @@ import (
 	"github.com/Mobrick/name-shortener/database"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/Mobrick/name-shortener/internal/compression"
+	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/Mobrick/name-shortener/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -46,6 +47,7 @@ func main() {
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 	r.Use(compression.DecompressMiddleware)
 	r.Use(logger.LoggingMiddleware)
+	r.Use(userauth.CookieMiddleware)
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
 	r.Get(`/ping`, env.PingDBHandle)

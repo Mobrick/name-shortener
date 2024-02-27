@@ -24,6 +24,7 @@ func CookieMiddleware(h http.Handler) http.Handler {
 			cookie := createNewCookie()
 			http.SetCookie(w, &cookie)
 		}
+		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(cookieFn)
 }
