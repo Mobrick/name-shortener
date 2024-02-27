@@ -12,6 +12,7 @@ import (
 )
 
 func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	var request models.Request
 	var buf bytes.Buffer
 
@@ -27,12 +28,37 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	db := env.DatabaseData
+	storage := env.Storage
+
 	urlToShorten := []byte(request.URL)
-	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, db, urlToShorten, req, ShortURLLength)
-	db.Add(shortURL, string(urlToShorten))
-	response := models.Response{
-		Result: shortAddress,
+
+	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
+
+	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	if err != nil {
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	if err != nil {
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var response models.Response
+	var status int
+	if len(existingShortURL) != 0 {
+		response = models.Response{
+			Result: urltf.MakeResultShortenedURL(hostAndPathPart, existingShortURL, req),
+		}
+		status = http.StatusConflict
+	} else {
+		response = models.Response{
+			Result: urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req),
+		}
+		status = http.StatusCreated
 	}
 
 	resp, err := json.Marshal(response)
@@ -43,6 +69,6 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 	}
 
 	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write([]byte(resp))
 }

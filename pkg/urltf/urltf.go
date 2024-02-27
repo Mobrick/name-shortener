@@ -5,16 +5,12 @@ import (
 	"encoding/base64"
 	"net/http"
 	"strings"
-
-	"github.com/Mobrick/name-shortener/database"
 )
 
-func MakeShortAddressAndURL(shortAddress string, db database.DatabaseData, urlToShorten []byte, req *http.Request, shortURLLength int) (string, string) {
+func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Request) string {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
 	}
-
-	shortURL := encodeURL(urlToShorten, db, shortURLLength)
 
 	if len(shortAddress) != 0 {
 		shortAddress += shortURL
@@ -24,25 +20,20 @@ func MakeShortAddressAndURL(shortAddress string, db database.DatabaseData, urlTo
 			shortAddress = "http://" + shortAddress
 		}
 	}
-	return shortAddress, shortURL
+	return shortAddress
 }
 
-func encodeURL(longURL []byte, db database.DatabaseData, shortURLLength int) string {
+func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 	var newURL string
 
-	for {
-		hash := make([]byte, shortURLLength)
-		_, err := rand.Read(hash)
-		if err != nil {
-			panic(err)
-		}
-
-		encodedHash := base64.URLEncoding.EncodeToString(hash)
-		newURL = encodedHash[:shortURLLength]
-
-		if !db.Contains(newURL) {
-			break
-		}
+	hash := make([]byte, shortURLLength)
+	_, err := rand.Read(hash)
+	if err != nil {
+		return newURL, err
 	}
-	return newURL
+
+	encodedHash := base64.URLEncoding.EncodeToString(hash)
+	newURL = encodedHash[:shortURLLength]
+	
+	return newURL, nil
 }

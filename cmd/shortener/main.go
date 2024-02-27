@@ -11,7 +11,6 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
-	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/handler"
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/logger"
@@ -32,16 +31,15 @@ func main() {
 
 	cfg := config.MakeConfig()
 
-	file, err := filestorage.MakeFile(cfg.FlagFileStoragePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
+	// Определение типа стораджа и создание соотвествующего объекта чтобы потом положить в хендлер
 
 	env := &handler.HandlerEnv{
 		ConfigStruct: cfg,
-		DatabaseData: database.NewDBFromFile(file),
+		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
+	// Добавить Close в интерфейс и закрвать через интерфейс
+	defer env.Storage.Close()
 
 	r := chi.NewRouter()
 
@@ -50,9 +48,11 @@ func main() {
 	r.Use(logger.LoggingMiddleware)
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
+	r.Get(`/ping`, env.PingDBHandle)
 
 	r.Post(`/`, env.LongURLHandle)
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)
+	r.Post(`/api/shorten/batch`, env.BatchHandler)
 
 	sugar.Infow(
 		"Starting server",
@@ -81,6 +81,6 @@ func main() {
 		log.Fatalf("HTTP shutdown error: %v", err)
 	}
 
-	file.Close()
+	env.Storage.Close()
 	sugar.Infow("Server stopped")
 }

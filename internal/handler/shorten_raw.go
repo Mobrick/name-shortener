@@ -4,10 +4,14 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Mobrick/name-shortener/logger"
 	"github.com/Mobrick/name-shortener/urltf"
+	"go.uber.org/zap"
 )
 
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
 	if err != nil {
 		res.Write([]byte(err.Error()))
@@ -17,11 +21,32 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	db := env.DatabaseData
-	shortAddress, shortURL := urltf.MakeShortAddressAndURL(env.ConfigStruct.FlagShortURLBaseAddr, db, urlToShorten, req, ShortURLLength)
-	db.Add(shortURL, string(urlToShorten))
+	storage := env.Storage
+
+	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
+	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
+	if err != nil {
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	if err != nil {
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var resultAddress string
+	var status int
+	if len(existingShortURL) != 0 {
+		resultAddress = urltf.MakeResultShortenedURL(hostAndPathPart, existingShortURL, req)
+		status = http.StatusConflict
+	} else {
+		resultAddress = urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req)
+		status = http.StatusCreated
+	}
 
 	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(shortAddress))
+	res.WriteHeader(status)
+	res.Write([]byte(resultAddress))
 }
