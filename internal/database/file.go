@@ -55,3 +55,8 @@ func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string, hostAnd
 	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
 }
+
+func (dbData FileDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	
+	return nil
+}

@@ -49,3 +49,8 @@ func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string, hos
 	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
 }
+
+func (dbData InMemoryDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	
+	return nil
+}

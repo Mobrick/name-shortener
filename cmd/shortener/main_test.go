@@ -23,10 +23,6 @@ func TestLongURLHandle(t *testing.T) {
 	}
 	defer env.Storage.Close()
 	shortURLLength := handler.ShortURLLength
-	type args struct {
-		res http.ResponseWriter
-		req *http.Request
-	}
 	type want struct {
 		code        int
 		responseLen int

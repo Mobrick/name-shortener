@@ -92,6 +92,7 @@ func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL st
 func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
 	var location string
 
+	// TODO: проверить, флаг is_deleted, если true, ответить 410 Gone
 	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url FROM url_records WHERE short_url = $1", shortURL)
 	err := row.Scan(&location)
 	if err == sql.ErrNoRows {
@@ -108,7 +109,8 @@ func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) er
 			` (uuid TEXT PRIMARY KEY, 
 			short_url TEXT NOT NULL, 
 			original_url TEXT NOT NULL UNIQUE,
-			user_id TEXT NOT NULL)`)
+			user_id TEXT NOT NULL, 
+			is_deleted BOOLEAN DEFAULT FALSE)`)
 
 	if err != nil {
 		return err
@@ -155,3 +157,62 @@ func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string, host
 	defer rows.Close()
 	return usersUrls, nil
 }
+
+func (dbData PostgreDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	stmt := "UPDATE url_records SET is_deleted = true WHERE short_url = ANY($1)"
+	_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, urlsToDelete)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// fanOut принимает канал данных, порождает 10 горутин
+func fanOut(doneCh chan struct{}, inputCh chan int) []chan int {
+    // количество горутин add
+    numWorkers := 10
+    // каналы, в которые отправляются результаты
+    channels := make([]chan int, numWorkers)
+
+
+    for i := 0; i < numWorkers; i++ {
+        // получаем канал из горутины add
+        addResultCh := add(doneCh, inputCh)
+        // отправляем его в слайс каналов
+        channels[i] = addResultCh
+    }
+
+    // возвращаем слайс каналов
+    return channels
+} 
+
+// fanIn принимает несколько каналов, в которых итоговые значения
+func fanIn(chs ...chan int) chan int {
+    var wg sync.WaitGroup
+    outCh := make(chan int)
+
+    // определяем функцию output для каждого канала в chs
+    // функция output копирует значения из канала с в канал outCh, пока с не будет закрыт 
+    output := func(c chan int) {
+        for n := range c {
+            outCh <- n
+        }
+        wg.Done()
+    }
+
+    // добавляем в группу столько горутин, сколько каналов пришло в fanIn
+    wg.Add(len(chs))
+    // перебираем все каналы, которые пришли и отправляем каждый в отдельную горутину 
+    for _, c := range chs {
+        go output(c)
+    }
+
+    // запускаем горутину для закрытия outCh после того, как все горутины отработают 
+    go func() {
+        wg.Wait()
+        close(outCh)
+    }()
+
+    // возвращаем общий канал
+    return outCh
+} 

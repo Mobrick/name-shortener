@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
@@ -23,20 +22,14 @@ const (
 	Local
 )
 
-type DatabaseData struct {
-	URLRecords         []models.URLRecord
-	DatabaseMap        map[string]string
-	FileStorage        *os.File
-	DatabaseConnection *sql.DB
-}
-
 type Storage interface {
 	Add(context.Context, string, string, string) (string, error)
 	AddMany(context.Context, map[string]models.BatchRequestURL, string) error
-	PingDB() error
+	Close()
+	Delete(context.Context, []string, string) error
 	Get(context.Context, string) (string, bool, error)
 	GetUrlsByUserId(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
-	Close()
+	PingDB() error
 }
 
 func NewDB(fileName string, connectionString string) Storage {

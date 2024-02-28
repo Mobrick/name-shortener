@@ -57,6 +57,8 @@ func main() {
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)
 	r.Post(`/api/shorten/batch`, env.BatchHandler)
 
+	r.Delete(`/api/user/urls`, env.DeleteUserUsrlsHandler)
+
 	sugar.Infow(
 		"Starting server",
 		"addr", cfg.FlagShortURLBaseAddr,
