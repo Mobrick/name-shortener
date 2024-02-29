@@ -27,7 +27,7 @@ type Storage interface {
 	AddMany(context.Context, map[string]models.BatchRequestURL, string) error
 	Close()
 	Delete(context.Context, []string, string) error
-	Get(context.Context, string) (string, bool, error)
+	Get(context.Context, string) (string, bool, bool, error)
 	GetUrlsByUserId(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
 	PingDB() error
 }

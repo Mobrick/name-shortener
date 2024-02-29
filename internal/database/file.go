@@ -22,9 +22,9 @@ func (dbData FileDB) PingDB() error {
 	return errors.New("missing database connection")
 }
 
-func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
+func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, bool, error) {
 	location, ok := dbData.DatabaseMap[shortURL]
-	return location, ok, nil
+	return location, ok, false, nil
 }
 
 func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {

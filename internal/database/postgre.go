@@ -89,18 +89,19 @@ func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL st
 	return "", nil
 }
 
-func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
+func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, bool, error) {
 	var location string
+	var isDeleted bool
 
 	// TODO: проверить, флаг is_deleted, если true, ответить 410 Gone
-	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url FROM url_records WHERE short_url = $1", shortURL)
+	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url, is_deleted FROM url_records WHERE short_url = $1", shortURL, isDeleted)
 	err := row.Scan(&location)
 	if err == sql.ErrNoRows {
-		return location, false, nil
+		return location, false, isDeleted, nil
 	} else if err != nil {
-		return location, false, err
+		return location, false, isDeleted, err
 	}
-	return location, true, nil
+	return location, true, isDeleted, nil
 }
 
 func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) error {
