@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/Mobrick/name-shortener/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
@@ -56,7 +57,15 @@ func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string, hostAnd
 	return usersUrls, nil
 }
 
-func (dbData FileDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
-	
+func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	for _, urlRecord := range dbData.URLRecords {
+		if urlRecord.UserID != userID {
+			continue
+		}
+		if !slices.Contains(urlsToDelete, urlRecord.ShortURL){
+			continue
+		}
+		urlRecord.DeletedFlag = true
+	}
 	return nil
 }

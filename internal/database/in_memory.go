@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
@@ -51,6 +52,14 @@ func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string, hos
 }
 
 func (dbData InMemoryDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
-	
+	for _, urlRecord := range dbData.URLRecords {
+		if urlRecord.UserID != userID {
+			continue
+		}
+		if !slices.Contains(urlsToDelete, urlRecord.ShortURL){
+			continue
+		}
+		urlRecord.DeletedFlag = true
+	}
 	return nil
 }
