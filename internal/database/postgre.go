@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"golang.org/x/sync/errgroup"
 )
 
 // Реализация для постгре
@@ -160,11 +161,25 @@ func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string, host
 }
 
 func (dbData PostgreDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
-	var err error
-	go func() {
-		stmt := "UPDATE url_records SET is_deleted = true WHERE short_url = ANY($1) AND user_id = $2"
-		_, err = dbData.DatabaseConnection.ExecContext(ctx, stmt, urlsToDelete, userID)
-	}()
+	g := new(errgroup.Group)
+	g.Go(func() error {
+		err := deletionRecepient(ctx, dbData.DatabaseConnection, urlsToDelete, userID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deletionRecepient(ctx context.Context, dbConnection *sql.DB, urlsToDelete []string, userID string) error {
+	stmt := "UPDATE url_records SET is_deleted = true WHERE short_url = ANY($1) AND user_id = $2"
+	_, err := dbConnection.ExecContext(ctx, stmt, urlsToDelete, userID)
 
 	if err != nil {
 		return err
