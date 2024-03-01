@@ -12,6 +12,8 @@ import (
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
+	userId, _ := GetUserIdFromRequest(req)
+
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
 	if err != nil {
 		res.Write([]byte(err.Error()))
@@ -26,13 +28,14 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userId)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

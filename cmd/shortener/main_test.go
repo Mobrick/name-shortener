@@ -23,10 +23,6 @@ func TestLongURLHandle(t *testing.T) {
 	}
 	defer env.Storage.Close()
 	shortURLLength := handler.ShortURLLength
-	type args struct {
-		res http.ResponseWriter
-		req *http.Request
-	}
 	type want struct {
 		code        int
 		responseLen int
@@ -58,6 +54,7 @@ func TestLongURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			
 			request := test.request
 			w := httptest.NewRecorder()
 			env.LongURLHandle(w, request)
@@ -127,7 +124,7 @@ func ShortenedURLHandle(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for k, v := range test.db {
-				env.Storage.Add(context.Background(), k, v)
+				env.Storage.Add(context.Background(), k, v, "")
 			}
 			request := httptest.NewRequest(http.MethodGet, "/{shortURL}", nil)
 			requestContext := chi.NewRouteContext()

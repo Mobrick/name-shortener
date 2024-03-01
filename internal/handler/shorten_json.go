@@ -16,6 +16,8 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 	var request models.Request
 	var buf bytes.Buffer
 
+	userId, _ := GetUserIdFromRequest(req)
+
 	// читаем тело запроса
 	_, err := buf.ReadFrom(req.Body)
 	if err != nil {
@@ -40,9 +42,9 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userId)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		logger.Log.Debug("could not complete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
