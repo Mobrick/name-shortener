@@ -137,7 +137,7 @@ func (dbData PostgreDB) Close() {
 
 func (dbData PostgreDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	var usersUrls []models.SimpleURLRecord
-	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1"
+	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1 AND is_deleted = false"
 	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userId)
 	if err != nil {
 		return nil, err
