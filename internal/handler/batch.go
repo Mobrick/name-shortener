@@ -31,9 +31,14 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if len(urls) == 0 {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req, userId)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging")
+		logger.Log.Debug("could not complete url storaging")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

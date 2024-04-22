@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "net/http/pprof" 
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/database"
@@ -58,6 +59,8 @@ func main() {
 	r.Post(`/api/shorten/batch`, env.BatchHandler)
 
 	r.Delete(`/api/user/urls`, env.DeleteUserUsrlsHandler)
+
+	r.Mount("/debug", middleware.Profiler())
 
 	sugar.Infow(
 		"Starting server",

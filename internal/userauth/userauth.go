@@ -20,8 +20,9 @@ type Claims struct {
 
 func CookieMiddleware(h http.Handler) http.Handler {
 	cookieFn := func(w http.ResponseWriter, r *http.Request) {
-		if !cookieIsValid(r) {
-			cookie, err := createNewCookie()
+		if !cookieIsValid(r) {			
+			newID := uuid.New().String()
+			cookie, err := CreateNewCookie(newID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -69,8 +70,8 @@ func GetUserID(tokenString string) (string, bool) {
 	return claims.UserID, true
 }
 
-func createNewCookie() (http.Cookie, error) {
-	tokenString, err := buildJWTString()
+func CreateNewCookie(newID string) (http.Cookie, error) {	
+	tokenString, err := buildJWTString(newID)
 	if err != nil {
 		return http.Cookie{}, err
 	}
@@ -87,8 +88,7 @@ func createNewCookie() (http.Cookie, error) {
 	return cookie, nil
 }
 
-func buildJWTString() (string, error) {
-	newID := uuid.New().String()
+func buildJWTString(newID string) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -30,6 +30,12 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if len(request.URL) == 0 {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	storage := env.Storage
 
 	urlToShorten := []byte(request.URL)
