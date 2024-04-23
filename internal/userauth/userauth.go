@@ -82,7 +82,7 @@ func CreateNewCookie(newID string) (http.Cookie, error) {
 	if err != nil {
 		return http.Cookie{}, err
 	}
-	
+
 	cookie := http.Cookie{
 		Name:     "auth_token",
 		Value:    tokenString,
