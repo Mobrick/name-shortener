@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/config"
-	"github.com/Mobrick/name-shortener/database"
-	"github.com/Mobrick/name-shortener/handler"
+	"github.com/Mobrick/name-shortener/internal/config"
+	"github.com/Mobrick/name-shortener/internal/database"
+	"github.com/Mobrick/name-shortener/internal/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

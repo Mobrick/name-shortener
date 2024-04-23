@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/logger"
+	"github.com/Mobrick/name-shortener/internal/logger"
 	"go.uber.org/zap"
 )
 

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/internal/userauth"
@@ -83,5 +83,22 @@ func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
 			assert.Equal(t, test.want.code, res.StatusCode)
 			assert.Equal(t, test.want.count, len(urls))
 		})
+	}
+}
+
+func BenchmarkUserUrlsHandler(b *testing.B) {
+	env := &HandlerEnv{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	request := httptest.NewRequest(http.MethodGet, "/api/user/urls", nil)
+	w := httptest.NewRecorder()
+	cookie, err := userauth.CreateNewCookie("1a91a181-80ec-45cb-a576-14db11505700")
+	if err != nil {
+		return
+	}
+	request.AddCookie(&cookie)
+	for i := 0; i < b.N; i++ {
+		env.UserUrlsHandler(w, request)
 	}
 }

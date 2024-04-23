@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/filestorage"
+	"github.com/Mobrick/name-shortener/internal/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

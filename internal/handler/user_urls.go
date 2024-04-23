@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/logger"
+	"github.com/Mobrick/name-shortener/internal/logger"
 )
 
 func (env HandlerEnv) UserUrlsHandler(res http.ResponseWriter, req *http.Request) {

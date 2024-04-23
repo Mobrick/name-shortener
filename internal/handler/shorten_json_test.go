@@ -3,13 +3,16 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
 	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,5 +81,29 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
+	}
+}
+
+func BenchmarkLongURLFromJSONHandle(b *testing.B) {
+	env := &HandlerEnv{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	bodyObject := models.Request{
+		URL: "https://www.google.com/",
+	}
+	body, err := json.Marshal(bodyObject)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	request := httptest.NewRequest(http.MethodPost, "/api/shorten", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	request.AddCookie(&cookie)
+	for i := 0; i < b.N; i++ {
+		env.LongURLHandle(w, request)
 	}
 }

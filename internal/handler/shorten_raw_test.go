@@ -8,8 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
+	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,6 +61,14 @@ func TestEnv_LongURLHandle(t *testing.T) {
 
 			request := test.request
 			w := httptest.NewRecorder()
+
+			cookie, err := userauth.CreateNewCookie(uuid.New().String())
+			if err != nil {
+				assert.Error(t, err, err.Error())
+				return
+			}
+			request.AddCookie(&cookie)
+
 			env.LongURLHandle(w, request)
 
 			res := w.Result()
@@ -71,5 +81,22 @@ func TestEnv_LongURLHandle(t *testing.T) {
 			log.Print("Config base address " + env.ConfigStruct.FlagShortURLBaseAddr)
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
+	}
+}
+
+func BenchmarkLongURLHandle(b *testing.B) {
+	env := &HandlerEnv{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/"))
+	w := httptest.NewRecorder()
+	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	if err != nil {		
+		return
+	}
+	request.AddCookie(&cookie)
+	for i := 0; i < b.N; i++ {
+		env.LongURLHandle(w, request)
 	}
 }

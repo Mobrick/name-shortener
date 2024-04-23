@@ -40,3 +40,9 @@ func Test_encodeURL(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncodeURL(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		EncodeURL([]byte("https://music.yandex.ru/home"), 8)
+	}
+}

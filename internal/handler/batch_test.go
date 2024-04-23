@@ -3,11 +3,12 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/config"
+	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/internal/userauth"
@@ -80,5 +81,36 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
+	}
+}
+
+func BenchmarkBatchHandler (b *testing.B) {
+	env := &HandlerEnv{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+
+	bodySlice := []models.BatchRequestURL{{
+		CorrelationID: "1234",
+		OriginalURL:   "https://www.google.com/",
+	}, {
+		CorrelationID: "1235",
+		OriginalURL:   "https://www.go.com/",
+	}}
+
+	body, err := json.Marshal(bodySlice)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	if err != nil {		
+		return
+	}
+	request.AddCookie(&cookie)
+	for i := 0; i < b.N; i++ {
+		env.BatchHandler(w, request)
 	}
 }

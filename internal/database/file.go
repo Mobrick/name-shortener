@@ -7,7 +7,7 @@ import (
 	"os"
 	"slices"
 
-	"github.com/Mobrick/name-shortener/filestorage"
+	"github.com/Mobrick/name-shortener/internal/filestorage"
 	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/google/uuid"
 )

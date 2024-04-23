@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"

@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/logger"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/internal/logger"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"go.uber.org/zap"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/database"
+	"github.com/Mobrick/name-shortener/internal/database"
 	"github.com/Mobrick/name-shortener/internal/models"
 )
 
