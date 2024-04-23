@@ -34,6 +34,6 @@ func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 
 	encodedHash := base64.URLEncoding.EncodeToString(hash)
 	newURL = encodedHash[:shortURLLength]
-	
+
 	return newURL, nil
 }

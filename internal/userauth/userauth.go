@@ -20,7 +20,7 @@ type Claims struct {
 
 func CookieMiddleware(h http.Handler) http.Handler {
 	cookieFn := func(w http.ResponseWriter, r *http.Request) {
-		if !cookieIsValid(r) {			
+		if !cookieIsValid(r) {
 			newID := uuid.New().String()
 			cookie, err := CreateNewCookie(newID)
 			if err != nil {
@@ -70,7 +70,7 @@ func GetUserID(tokenString string) (string, bool) {
 	return claims.UserID, true
 }
 
-func CreateNewCookie(newID string) (http.Cookie, error) {	
+func CreateNewCookie(newID string) (http.Cookie, error) {
 	tokenString, err := buildJWTString(newID)
 	if err != nil {
 		return http.Cookie{}, err

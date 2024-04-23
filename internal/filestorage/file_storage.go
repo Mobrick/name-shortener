@@ -39,7 +39,7 @@ func UploadNewURLRecord(newRecord models.URLRecord, file *os.File) error {
 	return nil
 }
 
-func MakeFile(fileName string) (*os.File, error) {	
+func MakeFile(fileName string) (*os.File, error) {
 	// На случай если флаг адреса файла был пуст, открытие файла
 	if len(fileName) == 0 {
 		return nil, nil

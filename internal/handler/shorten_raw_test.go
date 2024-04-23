@@ -92,7 +92,7 @@ func BenchmarkLongURLHandle(b *testing.B) {
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/"))
 	w := httptest.NewRecorder()
 	cookie, err := userauth.CreateNewCookie(uuid.New().String())
-	if err != nil {		
+	if err != nil {
 		return
 	}
 	request.AddCookie(&cookie)

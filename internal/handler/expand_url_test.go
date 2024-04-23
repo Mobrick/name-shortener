@@ -91,7 +91,7 @@ func TestEnv_ShortenedURLHandle(t *testing.T) {
 
 func BenchmarkShortenedURLHandle(b *testing.B) {
 	env := &HandlerEnv{
-		Storage: database.NewDBFromFile("tmp/short-url-db-test.json"),
+		Storage:      database.NewDBFromFile("tmp/short-url-db-test.json"),
 		ConfigStruct: config.MakeConfig(),
 	}
 	db := map[string]string{

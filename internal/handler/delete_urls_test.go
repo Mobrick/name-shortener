@@ -69,7 +69,7 @@ func TestHandlerEnv_DeleteUserUsrlsHandler(t *testing.T) {
 	}
 }
 
-func BenchmarkDeleteUserUsrlsHandler (b *testing.B) {
+func BenchmarkDeleteUserUsrlsHandler(b *testing.B) {
 	env := &HandlerEnv{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
@@ -87,7 +87,7 @@ func BenchmarkDeleteUserUsrlsHandler (b *testing.B) {
 	request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 	cookie, err := userauth.CreateNewCookie(uuid.New().String())
-	if err != nil {		
+	if err != nil {
 		return
 	}
 	request.AddCookie(&cookie)
