@@ -15,8 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Реализация для постгре
-
+// PostgreDB реализация для постгре.
 type PostgreDB struct {
 	DatabaseConnection *sql.DB
 	DatabaseMap        map[string]string
