@@ -18,7 +18,7 @@ import (
 )
 
 func TestHandlerEnv_BatchHandler(t *testing.T) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}
@@ -85,7 +85,7 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 }
 
 func BenchmarkBatchHandler(b *testing.B) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}

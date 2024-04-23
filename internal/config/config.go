@@ -5,14 +5,16 @@ import (
 	"os"
 )
 
+// Config хранит данные по флагам.
 type Config struct {
-	FlagRunAddr             string
-	FlagShortURLBaseAddr    string
-	FlagLogLevel            string
-	FlagFileStoragePath     string
-	FlagDBConnectionAddress string
+	FlagRunAddr             string	// адрес на котором запущен сервер
+	FlagShortURLBaseAddr    string	// базовый адрес сокращенного URL
+	FlagLogLevel            string	// уровень логировани
+	FlagFileStoragePath     string	// путь к файлу с сохраненными URL
+	FlagDBConnectionAddress string	// строка подключения к БД
 }
 
+// MakeConfig формирует конфигурацию по флагам, либо если есть, по переменным окружения.
 func MakeConfig() *Config {
 	config := &Config{}
 

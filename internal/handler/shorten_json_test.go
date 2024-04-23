@@ -18,7 +18,7 @@ import (
 )
 
 func TestEnv_LongURLFromJSONHandle(t *testing.T) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}
@@ -85,7 +85,7 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 }
 
 func BenchmarkLongURLFromJSONHandle(b *testing.B) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}

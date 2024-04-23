@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// для хранения в памяти
 
+// FileDB предствялет собой базу данных которая хранится в памяти.
 type InMemoryDB struct {
 	URLRecords  []models.URLRecord
 	DatabaseMap map[string]string

@@ -8,9 +8,11 @@ import (
 	"github.com/Mobrick/name-shortener/internal/models"
 )
 
+// MockDB - структура для мока
 type MockDB struct {
 }
 
+// NewMockDB создает мок хранилища
 func NewMockDB() database.Storage {
 	return MockDB{}
 }

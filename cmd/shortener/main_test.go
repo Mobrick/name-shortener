@@ -17,7 +17,7 @@ import (
 )
 
 func TestLongURLHandle(t *testing.T) {
-	env := &handler.HandlerEnv{
+	env := &handler.Env{
 		Storage:      database.NewDBFromFile("tmp/short-url-db-test.json"),
 		ConfigStruct: config.MakeConfig(),
 	}
@@ -73,7 +73,7 @@ func TestLongURLHandle(t *testing.T) {
 
 func ShortenedURLHandle(t *testing.T) {
 
-	env := &handler.HandlerEnv{
+	env := &handler.Env{
 		Storage: database.NewDBFromFile("tmp/short-url-db-test.json"),
 	}
 	defer env.Storage.Close()

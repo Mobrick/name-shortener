@@ -11,7 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
+// LongURLFromJSONHandle обрабатывает тело запроса в формате JSON и возвращает сокращенный адрес.
+func (env Env) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	var request models.Request
 	var buf bytes.Buffer

@@ -17,7 +17,7 @@ import (
 )
 
 func TestHandlerEnv_DeleteUserUsrlsHandler(t *testing.T) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}
@@ -70,7 +70,7 @@ func TestHandlerEnv_DeleteUserUsrlsHandler(t *testing.T) {
 }
 
 func BenchmarkDeleteUserUsrlsHandler(b *testing.B) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}

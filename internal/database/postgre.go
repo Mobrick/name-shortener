@@ -94,7 +94,6 @@ func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool,
 	var location string
 	var isDeleted bool
 
-	// TODO: проверить, флаг is_deleted, если true, ответить 410 Gone
 	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url, is_deleted FROM url_records WHERE short_url = $1", shortURL)
 	err := row.Scan(&location, &isDeleted)
 	if err == sql.ErrNoRows {

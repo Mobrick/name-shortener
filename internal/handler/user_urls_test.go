@@ -17,7 +17,7 @@ import (
 )
 
 func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}
@@ -87,7 +87,7 @@ func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
 }
 
 func BenchmarkUserUrlsHandler(b *testing.B) {
-	env := &HandlerEnv{
+	env := &Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}

@@ -7,7 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (env HandlerEnv) ShortenedURLHandle(res http.ResponseWriter, req *http.Request) {
+// ShortenedURLHandle перенаправляет по адресу сохраненному в хранилищу в соотвествии с полученным сокращенным адресом.
+func (env Env) ShortenedURLHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	shortURL := chi.URLParam((req), "shortURL")

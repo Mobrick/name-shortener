@@ -7,7 +7,8 @@ import (
 	"github.com/Mobrick/name-shortener/internal/logger"
 )
 
-func (env HandlerEnv) UserUrlsHandler(res http.ResponseWriter, req *http.Request) {
+// UserUrlsHandler возвращает адреса созданные пользователем.
+func (env Env) UserUrlsHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	userID, ok := GetUserIDFromRequest(req)

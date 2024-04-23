@@ -10,14 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
+// TokenExp - время жизни токена
 const TokenExp = time.Hour * 3
+
+// SecretKey - секретный ключ для шифрования
 const SecretKey = "tratatata"
 
+// Claims заявления при создании куки
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID string
 }
 
+// CookieMiddleware создает куки если её не было, и добавляет к запросу и к ответу.
 func CookieMiddleware(h http.Handler) http.Handler {
 	cookieFn := func(w http.ResponseWriter, r *http.Request) {
 		if !cookieIsValid(r) {
@@ -48,6 +53,7 @@ func cookieIsValid(r *http.Request) bool {
 	return ok
 }
 
+// GetUserID получает id пользователя из куки
 func GetUserID(tokenString string) (string, bool) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
@@ -70,12 +76,13 @@ func GetUserID(tokenString string) (string, bool) {
 	return claims.UserID, true
 }
 
+// CreateNewCookie - создание новой куки для юзера если такой куки не существует или она не проходит проверку подлинности.
 func CreateNewCookie(newID string) (http.Cookie, error) {
 	tokenString, err := buildJWTString(newID)
 	if err != nil {
 		return http.Cookie{}, err
 	}
-	// создание новой куки для юзера если такой куки не существует или она не проходит проверку подлинности
+	
 	cookie := http.Cookie{
 		Name:     "auth_token",
 		Value:    tokenString,

@@ -9,7 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
+// LongURLHandle возвращает сокращенный адрес.
+func (env Env) LongURLHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	userID, _ := GetUserIDFromRequest(req)

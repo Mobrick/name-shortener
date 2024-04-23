@@ -12,13 +12,13 @@ import (
 	"github.com/google/uuid"
 )
 
+// FileDB предствялет собой базу данных построенную по файлу при включении сервера.
 type FileDB struct {
 	DatabaseMap map[string]string
 	URLRecords  []models.URLRecord
 	FileStorage *os.File
 }
 
-// для хранения в файле
 func (dbData FileDB) PingDB() error {
 	return errors.New("missing database connection")
 }

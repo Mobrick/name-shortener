@@ -14,24 +14,31 @@ import (
 
 const urlRecordsTableName = "url_records"
 
-type StorageType int
-
-const (
-	SQLDB StorageType = iota
-	File
-	Local
-)
-
+// Storage описывает поведение хранилища.
 type Storage interface {
+	// Add добавляет данные о сокращенном URL в хранилище.
 	Add(context.Context, string, string, string) (string, error)
+
+	// AddMany добавляет множество данных о сокращенных URL в хранилище.
 	AddMany(context.Context, map[string]models.BatchRequestURL, string) error
+
+	// Close закрывает подключение к хранилищу.
 	Close()
+
+	// Delete удаляет данные о сокращенном URL из хранилища.
 	Delete(context.Context, []string, string) error
+
+	// Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
 	Get(context.Context, string) (string, bool, bool, error)
+
+	// GetUrlsByUserID возвращает записи созданные пользователем.
 	GetUrlsByUserID(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
+
+	// PingDB пингует подключение к бд.
 	PingDB() error
 }
 
+// NewDB создает объект хранилища в зависимости от того, чем заполнены флаги.
 func NewDB(fileName string, connectionString string) Storage {
 	var dbData Storage
 
@@ -52,6 +59,7 @@ func NewDB(fileName string, connectionString string) Storage {
 	return dbData
 }
 
+// NewDBFromFile формирует БД в памяти по содержимогу файла, путь к которому указан в флаге.
 func NewDBFromFile(fileName string) Storage {
 	file, err := filestorage.MakeFile(fileName)
 	if err != nil {
@@ -73,6 +81,7 @@ func NewDBFromFile(fileName string) Storage {
 	return databaseData
 }
 
+// NewDBConnection создает подключение к базе данные Postgre.
 func NewDBConnection(connectionString string) *sql.DB {
 	// Закрывается в основном потоке
 	db, err := sql.Open("pgx", connectionString)
@@ -92,6 +101,7 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 	return dbMap, urlRecords
 }
 
+// CreateRecordAndUpdateDBMap создает запись в памяти и вписывает её в мапу.
 func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, shortURL string, id string, userID string) models.URLRecord {
 	newRecord := models.URLRecord{
 		OriginalURL: originalURL,
@@ -104,6 +114,7 @@ func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, sho
 	return newRecord
 }
 
+// GetUrlsCreatedByUser возвращает URL которые создал текущий пользователь.
 func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userID string, hostAndPathPart string, req *http.Request) []models.SimpleURLRecord {
 	var usersUrls []models.SimpleURLRecord
 	for _, urlRecord := range urlRecords {

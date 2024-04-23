@@ -9,16 +9,18 @@ import (
 	"github.com/Mobrick/name-shortener/internal/userauth"
 )
 
-type HandlerEnv struct {
-	//DatabaseData database.DatabaseData
+// Env - структура окружения для хендлеров, в которой хранятся данные о хранилище и ссылка на конфигурацию
+type Env struct {
 	ConfigStruct *config.Config
 	Storage      database.Storage
 }
 
+// ShortURLLength константа отражающая количество символов до которого происходит сокращение адреса
 const (
 	ShortURLLength = 8
 )
 
+// GetUserIDFromRequest возвращает id пользователя, который вызвал обработчик, либо ничего
 func GetUserIDFromRequest(req *http.Request) (string, bool) {
 	cookie, err := req.Cookie("auth_token")
 	if err != nil {

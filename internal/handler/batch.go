@@ -11,7 +11,8 @@ import (
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 )
 
-func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
+// BatchHandler заносит в хранилище сразу множество URL.
+func (env Env) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	userID, _ := GetUserIDFromRequest(req)
@@ -55,7 +56,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
+func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
 	var responseRecords []models.BatchResponseURL
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr

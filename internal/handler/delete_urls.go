@@ -9,7 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (env HandlerEnv) DeleteUserUsrlsHandler(res http.ResponseWriter, req *http.Request) {
+// DeleteUserUsrlsHandler удаляет URL из хранилища переданные пользователем, которые были созданы им.
+func (env Env) DeleteUserUsrlsHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	userID, _ := GetUserIDFromRequest(req)

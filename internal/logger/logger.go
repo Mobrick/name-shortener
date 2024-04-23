@@ -7,8 +7,11 @@ import (
 	"go.uber.org/zap"
 )
 
-var Sugar zap.SugaredLogger
+// Log - логгер.
 var Log *zap.Logger = zap.NewNop()
+
+// Sugar позволяет создавать более подробное логирование.
+var Sugar zap.SugaredLogger
 
 // LoggingMiddleware добавляет дополнительный код для регистрации сведений о запросе
 // и возвращает новый http.HandlerFunc.

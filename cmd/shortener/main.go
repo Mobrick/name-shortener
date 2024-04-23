@@ -36,7 +36,7 @@ func main() {
 	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
 	// Определение типа стораджа и создание соотвествующего объекта чтобы потом положить в хендлер
 
-	env := &handler.HandlerEnv{
+	env := &handler.Env{
 		ConfigStruct: cfg,
 		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
