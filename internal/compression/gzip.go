@@ -7,18 +7,6 @@ import (
 	"strings"
 )
 
-var acceptableContentTypes = []string{"application/json", "text/html"}
-
-type gzipWriter struct {
-	http.ResponseWriter
-	Writer io.Writer
-}
-
-func (w gzipWriter) Write(b []byte) (int, error) {
-	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
-	return w.Writer.Write(b)
-}
-
 type gzipReader struct {
 	r  io.ReadCloser
 	zr *gzip.Reader
@@ -36,10 +24,12 @@ func newGzipReader(r io.ReadCloser) (*gzipReader, error) {
 	}, nil
 }
 
+// Read считывает для дальнейшего распаковывания слайса байт.
 func (c gzipReader) Read(p []byte) (n int, err error) {
 	return c.zr.Read(p)
 }
 
+// Close закрывает ридер декомпрессора.
 func (c *gzipReader) Close() error {
 	if err := c.r.Close(); err != nil {
 		return err
@@ -47,6 +37,7 @@ func (c *gzipReader) Close() error {
 	return c.zr.Close()
 }
 
+// DecompressMiddleware распактовывает данные из тела запроса
 func DecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

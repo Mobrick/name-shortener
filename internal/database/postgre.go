@@ -22,11 +22,13 @@ type PostgreDB struct {
 	DatabaseMap        map[string]string
 }
 
+// PingDB пингует подключение к бд.
 func (dbData PostgreDB) PingDB() error {
 	err := dbData.DatabaseConnection.Ping()
 	return err
 }
 
+// AddMany добавляет множество данных о сокращенных URL в хранилище.
 func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
@@ -58,6 +60,7 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 	return nil
 }
 
+// Add добавляет данные о сокращенном URL в хранилище.
 func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
 	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
@@ -90,6 +93,7 @@ func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL st
 	return "", nil
 }
 
+// Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
 func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, bool, error) {
 	var location string
 	var isDeleted bool
@@ -130,10 +134,12 @@ func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL s
 	return shortURL, nil
 }
 
+// Close закрывает подключение к хранилищу.
 func (dbData PostgreDB) Close() {
 	dbData.DatabaseConnection.Close()
 }
 
+// GetUrlsByUserID возвращает записи созданные пользователем.
 func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	var usersUrls []models.SimpleURLRecord
 	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1 AND is_deleted = false"
@@ -163,6 +169,7 @@ func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, host
 	return usersUrls, nil
 }
 
+// Delete удаляет данные о сокращенном URL из хранилища. При запросе пользователя удаление происходит не сразу, и просто ставится пометка об удалении.
 func (dbData PostgreDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
 	g := new(errgroup.Group)
 	g.Go(func() error {
