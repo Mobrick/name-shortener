@@ -58,6 +58,7 @@ func (dbData FileDB) GetUrlsByUserID(ctx context.Context, userID string, hostAnd
 }
 
 func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	var result []models.URLRecord
 	for _, urlRecord := range dbData.URLRecords {
 		if urlRecord.UserID != userID {
 			continue
@@ -65,7 +66,8 @@ func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID 
 		if !slices.Contains(urlsToDelete, urlRecord.ShortURL) {
 			continue
 		}
-		urlRecord.DeletedFlag = true
+		result = append(result, urlRecord)
 	}
+	dbData.URLRecords = result
 	return nil
 }
