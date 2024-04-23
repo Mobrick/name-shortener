@@ -28,9 +28,9 @@ func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, bo
 	return location, ok, false, nil
 }
 
-func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
+func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
 
 	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
@@ -38,9 +38,9 @@ func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL stri
 	return "", nil
 }
 
-func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
+func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		dbData.URLRecords = append(dbData.URLRecords, newRecord)
 		filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
 	}
@@ -51,9 +51,9 @@ func (dbData FileDB) Close() {
 	dbData.FileStorage.Close()
 }
 
-func (dbData FileDB) GetUrlsByUserID(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData FileDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
-	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userID, hostAndPathPart, req)
 	return usersUrls, nil
 }
 

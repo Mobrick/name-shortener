@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/internal/logger"
+	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"go.uber.org/zap"
 )
@@ -16,7 +16,7 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 	var request models.Request
 	var buf bytes.Buffer
 
-	userId, _ := GetUserIdFromRequest(req)
+	userID, _ := GetUserIDFromRequest(req)
 
 	// читаем тело запроса
 	_, err := buf.ReadFrom(req.Body)
@@ -48,7 +48,7 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userId)
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userID)
 	if err != nil {
 		logger.Log.Debug("could not complete url storaging", zap.String("URL to shorten", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)

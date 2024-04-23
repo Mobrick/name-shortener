@@ -12,7 +12,7 @@ import (
 func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	userId, _ := GetUserIdFromRequest(req)
+	userID, _ := GetUserIDFromRequest(req)
 
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
 	if err != nil {
@@ -33,7 +33,7 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userId)
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userID)
 	if err != nil {
 		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)

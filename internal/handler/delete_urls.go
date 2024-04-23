@@ -12,7 +12,7 @@ import (
 func (env HandlerEnv) DeleteUserUsrlsHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	userID, _ := GetUserIdFromRequest(req)
+	userID, _ := GetUserIDFromRequest(req)
 
 	urlsToDelete, err := parseRequestBody(req)
 	if err != nil {

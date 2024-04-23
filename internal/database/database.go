@@ -92,27 +92,27 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) (map[string]string, []mo
 	return dbMap, urlRecords
 }
 
-func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, shortURL string, id string, userId string) models.URLRecord {
+func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, shortURL string, id string, userID string) models.URLRecord {
 	newRecord := models.URLRecord{
 		OriginalURL: originalURL,
 		ShortURL:    shortURL,
 		UUID:        id,
-		UserID:      userId,
+		UserID:      userID,
 	}
 
 	dbMap[shortURL] = originalURL
 	return newRecord
 }
 
-func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userId string, hostAndPathPart string, req *http.Request) []models.SimpleURLRecord {
+func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userID string, hostAndPathPart string, req *http.Request) []models.SimpleURLRecord {
 	var usersUrls []models.SimpleURLRecord
 	for _, urlRecord := range urlRecords {
-		if urlRecord.UserID == userId && !urlRecord.DeletedFlag {
-			usersUrl := models.SimpleURLRecord{
+		if urlRecord.UserID == userID && !urlRecord.DeletedFlag {
+			usersURL := models.SimpleURLRecord{
 				ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, urlRecord.ShortURL, req),
 				OriginalURL: urlRecord.OriginalURL,
 			}
-			usersUrls = append(usersUrls, usersUrl)
+			usersUrls = append(usersUrls, usersURL)
 		}
 	}
 	return usersUrls

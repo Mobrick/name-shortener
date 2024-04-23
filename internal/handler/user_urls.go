@@ -10,7 +10,7 @@ import (
 func (env HandlerEnv) UserUrlsHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	userId, ok := GetUserIdFromRequest(req)
+	userID, ok := GetUserIDFromRequest(req)
 	if !ok {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
@@ -18,7 +18,7 @@ func (env HandlerEnv) UserUrlsHandler(res http.ResponseWriter, req *http.Request
 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 
-	urls, err := env.Storage.GetUrlsByUserID(ctx, userId, hostAndPathPart, req)
+	urls, err := env.Storage.GetUrlsByUserID(ctx, userID, hostAndPathPart, req)
 	if err != nil {
 		logger.Log.Debug("could not get urls by user id")
 		http.Error(res, err.Error(), http.StatusInternalServerError)

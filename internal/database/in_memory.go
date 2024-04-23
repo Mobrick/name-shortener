@@ -26,17 +26,17 @@ func (dbData InMemoryDB) Get(ctx context.Context, shortURL string) (string, bool
 	return location, ok, false, nil
 }
 
-func (dbData *InMemoryDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
+func (dbData *InMemoryDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
 	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 
 	return "", nil
 }
 
-func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
+func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	}
 	return nil
@@ -45,13 +45,13 @@ func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[st
 func (dbData InMemoryDB) Close() {
 }
 
-func (dbData InMemoryDB) GetUrlsByUserID(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData InMemoryDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
-	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
+	usersUrls := GetUrlsCreatedByUser(urlRecords, userID, hostAndPathPart, req)
 	return usersUrls, nil
 }
 
-func (dbData InMemoryDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+func (dbData *InMemoryDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
 	for _, urlRecord := range dbData.URLRecords {
 		if urlRecord.UserID != userID {
 			continue

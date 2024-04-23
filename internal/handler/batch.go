@@ -6,15 +6,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/internal/logger"
+	"github.com/Mobrick/name-shortener/internal/models"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 )
 
 func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	userId, _ := GetUserIdFromRequest(req)
+	userID, _ := GetUserIDFromRequest(req)
 
 	var buf bytes.Buffer
 
@@ -36,7 +36,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req, userId)
+	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req, userID)
 	if err != nil {
 		logger.Log.Debug("could not complete url storaging")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -55,7 +55,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request, userId string) ([]models.BatchResponseURL, error) {
+func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
 	var responseRecords []models.BatchResponseURL
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
@@ -77,7 +77,7 @@ func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorte
 		responseRecords = append(responseRecords, responseRecord)
 	}
 
-	err := storage.AddMany(ctx, shortURLRequestMap, userId)
+	err := storage.AddMany(ctx, shortURLRequestMap, userID)
 	if err != nil {
 		return nil, err
 	}

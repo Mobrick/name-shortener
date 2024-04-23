@@ -27,10 +27,10 @@ func (dbData PostgreDB) PingDB() error {
 	return err
 }
 
-func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userId string) error {
+func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userId)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		sliceOfRecords = append(sliceOfRecords, newRecord)
 	}
 
@@ -58,9 +58,9 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 	return nil
 }
 
-func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string, userId string) (string, error) {
+func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userId)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
 
 	err := dbData.createURLRecordsTableIfNotExists(ctx)
 	if err != nil {
@@ -135,10 +135,10 @@ func (dbData PostgreDB) Close() {
 	dbData.DatabaseConnection.Close()
 }
 
-func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	var usersUrls []models.SimpleURLRecord
 	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1 AND is_deleted = false"
-	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userId)
+	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,11 +149,15 @@ func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userId string, host
 			return nil, err
 		}
 
-		usersUrl := models.SimpleURLRecord{
+		usersURL := models.SimpleURLRecord{
 			ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, shortURL, req),
 			OriginalURL: originalURL,
 		}
-		usersUrls = append(usersUrls, usersUrl)
+		usersUrls = append(usersUrls, usersURL)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	defer rows.Close()
