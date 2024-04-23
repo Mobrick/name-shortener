@@ -51,7 +51,7 @@ func (dbData FileDB) Close() {
 	dbData.FileStorage.Close()
 }
 
-func (dbData FileDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData FileDB) GetUrlsByUserID(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
 	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
@@ -62,7 +62,7 @@ func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID 
 		if urlRecord.UserID != userID {
 			continue
 		}
-		if !slices.Contains(urlsToDelete, urlRecord.ShortURL){
+		if !slices.Contains(urlsToDelete, urlRecord.ShortURL) {
 			continue
 		}
 		urlRecord.DeletedFlag = true

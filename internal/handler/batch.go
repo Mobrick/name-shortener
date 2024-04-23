@@ -32,7 +32,7 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(urls) == 0 {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 

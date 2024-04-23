@@ -9,14 +9,11 @@ import (
 
 	"github.com/Mobrick/name-shortener/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/internal/userauth"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandlerEnv_BatchHandler(t *testing.T) {
+func TestHandlerEnv_DeleteUserUsrlsHandler(t *testing.T) {
 	env := &HandlerEnv{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
@@ -28,29 +25,23 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		body []models.BatchRequestURL
+		body []string
 		want want
 	}{
 		{
-			name: "positive shorten test #1",
-			body: []models.BatchRequestURL{{
-				CorrelationID: "1234",
-				OriginalURL:   "https://www.google.com/",
-			}, {
-				CorrelationID: "1235",
-				OriginalURL:   "https://www.go.com/",
-			}},
+			name: "positive deletion test #1",
+			body: []string{
+				"6qxTVvsy", "RTfd56hn", "Jlfd67ds",
+			},
 			want: want{
-				code:        201,
-				contentType: "application/json",
+				code: 202,
 			},
 		},
 		{
-			name: "empty shorten test #1",
-			body: []models.BatchRequestURL{},
+			name: "empty deletion test #1",
+			body: []string{},
 			want: want{
-				code:        400,
-				contentType: "",
+				code: 400,
 			},
 		},
 	}
@@ -61,17 +52,9 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 				assert.Error(t, err, err.Error())
 			}
 
-			request := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(body))
+			request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
 			w := httptest.NewRecorder()
-
-			cookie, err := userauth.CreateNewCookie(uuid.New().String())
-			if err != nil {
-				assert.Error(t, err, err.Error())
-				return
-			}
-			request.AddCookie(&cookie)
-
-			env.BatchHandler(w, request)
+			env.DeleteUserUsrlsHandler(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)

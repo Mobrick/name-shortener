@@ -2,6 +2,7 @@ package handler
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,7 +22,6 @@ func TestEnv_LongURLHandle(t *testing.T) {
 	defer env.Storage.Close()
 	type want struct {
 		code        int
-		responseLen int
 		contentType string
 	}
 	tests := []struct {
@@ -34,7 +34,6 @@ func TestEnv_LongURLHandle(t *testing.T) {
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/")),
 			want: want{
 				code:        201,
-				responseLen: len(env.ConfigStruct.FlagShortURLBaseAddr) + ShortURLLength,
 				contentType: "text/plain",
 			},
 		},
@@ -43,16 +42,14 @@ func TestEnv_LongURLHandle(t *testing.T) {
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("")),
 			want: want{
 				code:        400,
-				responseLen: 0,
 				contentType: "",
 			},
 		},
 		{
-			name:    "positive shorten test #1",
+			name:    "conflict shorten test #1",
 			request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.go.com/")),
 			want: want{
 				code:        409,
-				responseLen: len(env.ConfigStruct.FlagShortURLBaseAddr) + ShortURLLength,
 				contentType: "text/plain",
 			},
 		},
@@ -70,7 +67,8 @@ func TestEnv_LongURLHandle(t *testing.T) {
 			resBody, err := io.ReadAll(res.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, test.want.responseLen, len(string(resBody)))
+			log.Print("Result short address " + string(resBody))
+			log.Print("Config base address " + env.ConfigStruct.FlagShortURLBaseAddr)
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}

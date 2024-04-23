@@ -33,12 +33,27 @@ func (dbData MockDB) Delete(context.Context, []string, string) error {
 	return nil
 }
 
-func (dbData MockDB) Get(context.Context, string) (string, bool, bool, error) {	
+func (dbData MockDB) Get(context.Context, string) (string, bool, bool, error) {
 	return "", false, false, nil
 }
 
-func (dbData MockDB) GetUrlsByUserId(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error) {
-	return nil, nil
+func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string, _ *http.Request) ([]models.SimpleURLRecord, error) {
+	if userID == "1a91a181-80ec-45cb-a576-14db11505700" {
+		urls := []models.SimpleURLRecord{
+			{
+				ShortURL:    "DDDDdddd",
+				OriginalURL: "https://www.google.com/",
+			},
+			{
+				ShortURL:    "vvvv4444",
+				OriginalURL: "https://www.go.com/",
+			},
+		}
+		return urls, nil
+	} else {
+		urls := []models.SimpleURLRecord{}
+		return urls, nil
+	}
 }
 
 func (dbData MockDB) PingDB() error {

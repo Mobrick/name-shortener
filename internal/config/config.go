@@ -16,11 +16,21 @@ type Config struct {
 func MakeConfig() *Config {
 	config := &Config{}
 
-	flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
-	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
-	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
-	flag.StringVar(&config.FlagFileStoragePath, "f", "", "path of file with saved URLs")
-	flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	if flag.Lookup("a") == nil {
+		flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
+	}
+	if flag.Lookup("b") == nil {
+		flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
+	}
+	if flag.Lookup("l") == nil {
+		flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
+	}
+	if flag.Lookup("f") == nil {
+		flag.StringVar(&config.FlagFileStoragePath, "f", "", "path of file with saved URLs")
+	}
+	if flag.Lookup("d") == nil {
+		flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	}
 
 	flag.Parse()
 

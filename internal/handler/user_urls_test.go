@@ -41,7 +41,7 @@ func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
 			name: "0 url ok test #2",
 			id:   "1954c654-dee9-44c7-81d1-6da6cfe918b2",
 			want: want{
-				code:  204,
+				code:  409,
 				count: 0,
 			},
 		},

@@ -45,7 +45,7 @@ func (dbData *InMemoryDB) AddMany(ctx context.Context, shortURLRequestMap map[st
 func (dbData InMemoryDB) Close() {
 }
 
-func (dbData InMemoryDB) GetUrlsByUserId(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData InMemoryDB) GetUrlsByUserID(ctx context.Context, userId string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
 	usersUrls := GetUrlsCreatedByUser(urlRecords, userId, hostAndPathPart, req)
 	return usersUrls, nil
@@ -56,7 +56,7 @@ func (dbData InMemoryDB) Delete(ctx context.Context, urlsToDelete []string, user
 		if urlRecord.UserID != userID {
 			continue
 		}
-		if !slices.Contains(urlsToDelete, urlRecord.ShortURL){
+		if !slices.Contains(urlsToDelete, urlRecord.ShortURL) {
 			continue
 		}
 		urlRecord.DeletedFlag = true

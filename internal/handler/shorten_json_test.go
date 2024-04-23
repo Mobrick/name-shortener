@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +22,6 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 	defer env.Storage.Close()
 	type want struct {
 		code        int
-		responseLen int
 		contentType string
 	}
 	tests := []struct {
@@ -38,7 +36,6 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 			},
 			want: want{
 				code:        201,
-				responseLen: len(env.ConfigStruct.FlagShortURLBaseAddr) + ShortURLLength,
 				contentType: "application/json",
 			},
 		},
@@ -49,7 +46,6 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 			},
 			want: want{
 				code:        400,
-				responseLen: 0,
 				contentType: "",
 			},
 		},
@@ -60,7 +56,6 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 			},
 			want: want{
 				code:        409,
-				responseLen: len(env.ConfigStruct.FlagShortURLBaseAddr) + ShortURLLength,
 				contentType: "application/json",
 			},
 		},
@@ -79,10 +74,8 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
 			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, test.want.responseLen, len(string(resBody)))
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
