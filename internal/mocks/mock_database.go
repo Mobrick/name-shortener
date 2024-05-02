@@ -40,8 +40,8 @@ func (dbData MockDB) Delete(context.Context, []string, string) error {
 }
 
 // Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
-func (dbData MockDB) Get(context.Context, string) (string, bool, bool, error) {
-	return "", false, false, nil
+func (dbData MockDB) Get(context.Context, string) (string, bool, error) {
+	return "", false, nil
 }
 
 // GetUrlsByUserID возвращает записи созданные пользователем.

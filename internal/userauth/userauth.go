@@ -1,7 +1,6 @@
 package userauth
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -58,9 +57,6 @@ func GetUserID(tokenString string) (string, bool) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-			}
 			return []byte(SecretKey), nil
 		})
 	if err != nil {
@@ -72,7 +68,7 @@ func GetUserID(tokenString string) (string, bool) {
 		return "", false
 	}
 
-	log.Printf("Token is valid")
+	log.Printf("Token is valid.")
 	return claims.UserID, true
 }
 

@@ -57,7 +57,7 @@ func (env Env) BatchHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
-	var responseRecords []models.BatchResponseURL
+	responseRecords := make([]models.BatchResponseURL, 0, len(urlsToShorten))
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 	shortURLRequestMap := make(map[string]models.BatchRequestURL)

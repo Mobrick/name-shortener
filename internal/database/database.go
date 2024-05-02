@@ -29,7 +29,7 @@ type Storage interface {
 	Delete(context.Context, []string, string) error
 
 	// Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
-	Get(context.Context, string) (string, bool, bool, error)
+	Get(context.Context, string) (string, bool, error)
 
 	// GetUrlsByUserID возвращает записи созданные пользователем.
 	GetUrlsByUserID(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
@@ -42,14 +42,15 @@ type Storage interface {
 func NewDB(fileName string, connectionString string) Storage {
 	var dbData Storage
 
-	if len(connectionString) != 0 {
+	switch {
+	case len(connectionString) != 0:
 		dbData = PostgreDB{
 			DatabaseMap:        make(map[string]string),
 			DatabaseConnection: NewDBConnection(connectionString),
 		}
-	} else if len(fileName) != 0 {
+	case len(fileName) != 0:
 		dbData = NewDBFromFile(fileName)
-	} else {
+	default:
 		dbData = &InMemoryDB{
 			URLRecords:  make([]models.URLRecord, 0),
 			DatabaseMap: make(map[string]string),

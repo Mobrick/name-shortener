@@ -83,28 +83,27 @@ func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL st
 				return "", findErr
 			}
 			return exisitingURL, nil
-		} else {
-			log.Printf("Failed to insert a record: " + originalURL)
-			return "", err
 		}
+		log.Printf("Failed to insert a record: " + originalURL)
+		return "", err
 	}
 
 	return "", nil
 }
 
 // Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
-func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, bool, error) {
+func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
 	var location string
 	var isDeleted bool
 
 	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url, is_deleted FROM url_records WHERE short_url = $1", shortURL)
 	err := row.Scan(&location, &isDeleted)
 	if err == sql.ErrNoRows {
-		return location, false, isDeleted, nil
+		return "", isDeleted, nil
 	} else if err != nil {
-		return location, false, isDeleted, err
+		return "", isDeleted, err
 	}
-	return location, true, isDeleted, nil
+	return location, isDeleted, nil
 }
 
 func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) error {

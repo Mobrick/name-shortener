@@ -25,9 +25,12 @@ func (dbData FileDB) PingDB() error {
 }
 
 // Get возвращает оригинальный URL.
-func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, bool, error) {
+func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
 	location, ok := dbData.DatabaseMap[shortURL]
-	return location, ok, false, nil
+	if !ok {
+		return "", false, nil
+	}
+	return location, false, nil
 }
 
 // Add добавляет данные о сокращенном URL в хранилище.

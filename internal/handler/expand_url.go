@@ -16,13 +16,13 @@ func (env Env) ShortenedURLHandle(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	location, ok, isDeleted, err := env.Storage.Get(ctx, string(shortURL))
+	location, isDeleted, err := env.Storage.Get(ctx, string(shortURL))
 	if err != nil {
 		log.Printf("could not complete original address request")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if !ok {
+	if len(location) == 0 {
 		log.Printf("no matching data to %s found", shortURL)
 		res.WriteHeader(http.StatusBadRequest)
 		return
