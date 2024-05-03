@@ -13,51 +13,95 @@ import (
 	"github.com/google/uuid"
 )
 
+const urlRecordsTableName = "url_records"
+
+type StorageType int
+
+const (
+	SQLDB StorageType = iota
+	File
+	Local
+)
+
 type DatabaseData struct {
 	URLRecords         []models.URLRecord
 	DatabaseMap        map[string]string
 	FileStorage        *os.File
 	DatabaseConnection *sql.DB
+	StorageType        StorageType
 }
 
 func (dbData DatabaseData) Get(shortURL string) (string, bool) {
-	location, ok := dbData.DatabaseMap[shortURL]
-	return location, ok
+	switch dbData.StorageType {
+	case SQLDB:
+		location, ok := dbData.GetLocationFromSQLDB(shortURL)
+		return location, ok
+	default:
+		location, ok := dbData.DatabaseMap[shortURL]
+		return location, ok
+	}
+
 }
 
-func NewDB(fileStorage *os.File, connectionString string) DatabaseData {
-	dbData := NewDBFromFile(fileStorage)
-	dbData.DatabaseConnection = NewDBConnection(connectionString)
-	return dbData
+func (dbData DatabaseData) GetLocationFromSQLDB(shortURL string) (string, bool) {
+	var location string
+
+	row := dbData.DatabaseConnection.QueryRow("SELECT original_url FROM url_records WHERE short_url = $1", shortURL)
+	err := row.Scan(&location)
+	if err == sql.ErrNoRows {
+		return location, false
+	}
+	return location, true
 }
 
-func NewDBFromFile(fileStorage *os.File) DatabaseData {
-	if fileStorage == nil {
-		return DatabaseData{
+func NewDB(fileName string, connectionString string) DatabaseData {
+	var dbData DatabaseData
+
+	if len(connectionString) != 0 {
+		dbData = DatabaseData{
+			StorageType:        SQLDB,
+			URLRecords:         make([]models.URLRecord, 0),
+			DatabaseMap:        make(map[string]string),
+			DatabaseConnection: NewDBConnection(connectionString),
+		}
+	} else if len(fileName) != 0 {
+		dbData = NewDBFromFile(fileName)
+	} else {
+		dbData = DatabaseData{
+			StorageType: Local,
 			URLRecords:  make([]models.URLRecord, 0),
 			DatabaseMap: make(map[string]string),
 		}
 	}
-	urlRecords, err := filestorage.LoadURLRecords(fileStorage)
+
+	return dbData
+}
+
+func NewDBFromFile(fileName string) DatabaseData {
+	file, err := filestorage.MakeFile(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	urlRecords, err := filestorage.LoadURLRecords(file)
 	if err != nil {
 		panic(err)
 	}
 
 	dbMap, urlRecords := dbMapFromURLRecords(urlRecords)
 	databaseData := DatabaseData{
+		StorageType: File,
 		URLRecords:  urlRecords,
 		DatabaseMap: dbMap,
-		FileStorage: fileStorage,
+		FileStorage: file,
 	}
 
 	return databaseData
 }
 
 func NewDBConnection(connectionString string) *sql.DB {
-
-	ps := fmt.Sprintf(connectionString)
-
-	db, err := sql.Open("pgx", ps)
+	// Закрывается в основном потоке
+	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		log.Fatal(err)
 		return nil
@@ -78,13 +122,51 @@ func (dbData DatabaseData) Add(shortURL string, originalURL string) {
 	newRecord := models.URLRecord{
 		OriginalURL: originalURL,
 		ShortURL:    shortURL,
+		UUID:        uuid.New().String(),
 	}
-	newRecord.UUID = uuid.New().String()
 
-	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 	dbData.DatabaseMap[shortURL] = originalURL
 
+	switch dbData.StorageType {
+	case SQLDB:
+		dbData.SQLDBAdd(newRecord)
+	case File:
+		dbData.FileAdd(newRecord)
+	default:
+		dbData.LocalAdd(newRecord)
+	}
+}
+
+func (dbData DatabaseData) SQLDBAdd(newRecord models.URLRecord) {
+	dbData.AddToSQLDB(newRecord)
+}
+
+func (dbData DatabaseData) AddToSQLDB(urlRecord models.URLRecord) {
+	dbData.CreateURLRecordsTableIfNotExisits()
+
+	_, err := dbData.DatabaseConnection.Exec("INSERT INTO url_records (uuid, short_url, original_url)"+
+		" VALUES ($1, $2, $3)", urlRecord.UUID, urlRecord.ShortURL, urlRecord.OriginalURL)
+	if err != nil {
+		fmt.Println("Failed to insert a record:", err)
+		return
+	}
+}
+
+func (dbData DatabaseData) CreateURLRecordsTableIfNotExisits() {
+	_, err := dbData.DatabaseConnection.Exec("CREATE TABLE IF NOT EXISTS " + urlRecordsTableName + " (uuid VARCHAR(255) PRIMARY KEY, short_url VARCHAR(255) NOT NULL, original_url VARCHAR(255) NOT NULL)")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (dbData DatabaseData) FileAdd(newRecord models.URLRecord) {
+	dbData.LocalAdd(newRecord)
 	filestorage.UploadNewURLRecord(newRecord, dbData.FileStorage)
+}
+
+func (dbData DatabaseData) LocalAdd(newRecord models.URLRecord) {
+	dbData.URLRecords = append(dbData.URLRecords, newRecord)
 }
 
 func (dbData DatabaseData) Contains(shortUrl string) bool {
