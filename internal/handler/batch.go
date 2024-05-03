@@ -6,13 +6,17 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Mobrick/name-shortener/internal/logger"
 	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/logger"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 )
 
-func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
+// BatchHandler заносит в хранилище сразу множество URL.
+func (env Env) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
+
+	userID, _ := GetUserIDFromRequest(req)
+
 	var buf bytes.Buffer
 
 	// читаем тело запроса
@@ -28,9 +32,14 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req)
+	if len(urls) == 0 {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	responseRecords, err := processMultipleURLRecords(ctx, env, urls, req, userID)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging")		
+		logger.Log.Debug("could not complete url storaging")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -47,8 +56,8 @@ func (env HandlerEnv) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorten []models.BatchRequestURL, req *http.Request) ([]models.BatchResponseURL, error) {
-	var responseRecords []models.BatchResponseURL
+func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
+	responseRecords := make([]models.BatchResponseURL, 0, len(urlsToShorten))
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 	shortURLRequestMap := make(map[string]models.BatchRequestURL)
@@ -69,7 +78,7 @@ func processMultipleURLRecords(ctx context.Context, env HandlerEnv, urlsToShorte
 		responseRecords = append(responseRecords, responseRecord)
 	}
 
-	err := storage.AddMany(ctx, shortURLRequestMap)
+	err := storage.AddMany(ctx, shortURLRequestMap, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -5,22 +5,34 @@ import (
 	"os"
 )
 
+// Config хранит данные по флагам.
 type Config struct {
-	FlagRunAddr             string
-	FlagShortURLBaseAddr    string
-	FlagLogLevel            string
-	FlagFileStoragePath     string
-	FlagDBConnectionAddress string
+	FlagRunAddr             string // адрес на котором запущен сервер
+	FlagShortURLBaseAddr    string // базовый адрес сокращенного URL
+	FlagLogLevel            string // уровень логировани
+	FlagFileStoragePath     string // путь к файлу с сохраненными URL
+	FlagDBConnectionAddress string // строка подключения к БД
 }
 
+// MakeConfig формирует конфигурацию по флагам, либо если есть, по переменным окружения.
 func MakeConfig() *Config {
 	config := &Config{}
 
-	flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
-	flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
-	flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
-	flag.StringVar(&config.FlagFileStoragePath, "f", "", "path of file with saved URLs")
-	flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	if flag.Lookup("a") == nil {
+		flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
+	}
+	if flag.Lookup("b") == nil {
+		flag.StringVar(&config.FlagShortURLBaseAddr, "b", "http://localhost:8080/", "base address of shortened URL")
+	}
+	if flag.Lookup("l") == nil {
+		flag.StringVar(&config.FlagLogLevel, "l", "info", "log level")
+	}
+	if flag.Lookup("f") == nil {
+		flag.StringVar(&config.FlagFileStoragePath, "f", "", "path of file with saved URLs")
+	}
+	if flag.Lookup("d") == nil {
+		flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	}
 
 	flag.Parse()
 

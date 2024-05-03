@@ -7,8 +7,11 @@ import (
 	"go.uber.org/zap"
 )
 
-var Sugar zap.SugaredLogger
+// Log - логгер.
 var Log *zap.Logger = zap.NewNop()
+
+// Sugar позволяет создавать более подробное логирование.
+var Sugar zap.SugaredLogger
 
 // LoggingMiddleware добавляет дополнительный код для регистрации сведений о запросе
 // и возвращает новый http.HandlerFunc.
@@ -65,6 +68,7 @@ type (
 	}
 )
 
+// Write записывает ответ через логгер.
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	// записываем ответ, используя оригинальный http.ResponseWriter
 	size, err := r.ResponseWriter.Write(b)
@@ -72,6 +76,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
+// WriteHeader записывает код статуса через логгер.
 func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	// записываем код статуса, используя оригинальный http.ResponseWriter
 	r.ResponseWriter.WriteHeader(statusCode)

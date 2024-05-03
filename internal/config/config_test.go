@@ -3,13 +3,13 @@ package config
 import (
 	"os"
 	"testing"
-	
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeConfig(t *testing.T) {
 	type want struct {
-		envRunAddr string
+		envRunAddr  string
 		envBaseAddr string
 	}
 	tests := []struct {
@@ -18,15 +18,15 @@ func TestMakeConfig(t *testing.T) {
 	}{
 		{
 			name: "positive MakeConfig test #1",
-			want: want {
-				envRunAddr: ":8081",
+			want: want{
+				envRunAddr:  ":8081",
 				envBaseAddr: "http://just.an.example.com/",
 			},
 		},
 		{
 			name: "positive MakeConfig test #2",
-			want: want {
-				envRunAddr: ":8083",
+			want: want{
+				envRunAddr:  ":8083",
 				envBaseAddr: "http://ok.example.com/",
 			},
 		},

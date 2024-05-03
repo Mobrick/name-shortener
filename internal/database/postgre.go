@@ -5,29 +5,33 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"golang.org/x/sync/errgroup"
 )
 
-// Реализация для постгре
-
+// PostgreDB реализация для постгре.
 type PostgreDB struct {
 	DatabaseConnection *sql.DB
 	DatabaseMap        map[string]string
 }
 
+// PingDB пингует подключение к бд.
 func (dbData PostgreDB) PingDB() error {
 	err := dbData.DatabaseConnection.Ping()
 	return err
 }
 
-func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL) error {
+// AddMany добавляет множество данных о сокращенных URL в хранилище.
+func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
 	var sliceOfRecords []models.URLRecord
 	for shortURL, record := range shortURLRequestMap {
-		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID)
+		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		sliceOfRecords = append(sliceOfRecords, newRecord)
 	}
 
@@ -38,11 +42,11 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 
 	defer tx.Rollback()
 
-	stmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
-		" VALUES ($1, $2, $3)"
+	stmt := "INSERT INTO url_records (uuid, short_url, original_url, user_id)" +
+		" VALUES ($1, $2, $3, $4)"
 
 	for _, record := range sliceOfRecords {
-		_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, record.UUID, record.ShortURL, record.OriginalURL)
+		_, err := dbData.DatabaseConnection.ExecContext(ctx, stmt, record.UUID, record.ShortURL, record.OriginalURL, record.UserID)
 		if err != nil {
 			return err
 		}
@@ -55,49 +59,51 @@ func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[stri
 	return nil
 }
 
-func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string) (string, error) {
+// Add добавляет данные о сокращенном URL в хранилище.
+func (dbData PostgreDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
-	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id)
+	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
 
 	err := dbData.createURLRecordsTableIfNotExists(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url)" +
-		" VALUES ($1, $2, $3)"
+	insertStmt := "INSERT INTO url_records (uuid, short_url, original_url, user_id)" +
+		" VALUES ($1, $2, $3, $4)"
 
-	_, err = dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL)
+	_, err = dbData.DatabaseConnection.ExecContext(ctx, insertStmt, newRecord.UUID, newRecord.ShortURL, originalURL, newRecord.UserID)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			log.Printf("url %s already in database", originalURL)
 			exisitingURL, findErr := dbData.findExisitingShortURL(ctx, originalURL)
-			if findErr != nil{
+			if findErr != nil {
 				return "", findErr
 			}
-			return exisitingURL ,nil
-		} else {
-			log.Printf("Failed to insert a record: "+originalURL)
-			return "", err
+			return exisitingURL, nil
 		}
+		log.Printf("Failed to insert a record: " + originalURL)
+		return "", err
 	}
 
 	return "", nil
 }
 
+// Get возвращает оригинальный URL, либо сообщает об отсуствии соответсвующего URL, также возвращает пометку об удалении.
 func (dbData PostgreDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
 	var location string
+	var isDeleted bool
 
-	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url FROM url_records WHERE short_url = $1", shortURL)
-	err := row.Scan(&location)
+	row := dbData.DatabaseConnection.QueryRowContext(ctx, "SELECT original_url, is_deleted FROM url_records WHERE short_url = $1", shortURL)
+	err := row.Scan(&location, &isDeleted)
 	if err == sql.ErrNoRows {
-		return location, false, nil
+		return "", isDeleted, nil
 	} else if err != nil {
-		return location, false, err
+		return "", isDeleted, err
 	}
-	return location, true, nil
+	return location, isDeleted, nil
 }
 
 func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) error {
@@ -105,7 +111,9 @@ func (dbData PostgreDB) createURLRecordsTableIfNotExists(ctx context.Context) er
 		"CREATE TABLE IF NOT EXISTS "+urlRecordsTableName+
 			` (uuid TEXT PRIMARY KEY, 
 			short_url TEXT NOT NULL, 
-			original_url TEXT NOT NULL UNIQUE)`)
+			original_url TEXT NOT NULL UNIQUE,
+			user_id TEXT NOT NULL, 
+			is_deleted BOOLEAN DEFAULT FALSE)`)
 
 	if err != nil {
 		return err
@@ -118,12 +126,71 @@ func (dbData PostgreDB) findExisitingShortURL(ctx context.Context, originalURL s
 	var shortURL string
 	err := dbData.DatabaseConnection.QueryRowContext(ctx, stmt, originalURL).Scan(&shortURL)
 	if err != nil {
-		log.Printf("Failed to find existing shotened url for this: "+originalURL)
+		log.Printf("Failed to find existing shotened url for this: " + originalURL)
 		return "", err
 	}
 	return shortURL, nil
 }
 
+// Close закрывает подключение к хранилищу.
 func (dbData PostgreDB) Close() {
 	dbData.DatabaseConnection.Close()
+}
+
+// GetUrlsByUserID возвращает записи созданные пользователем.
+func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+	var usersUrls []models.SimpleURLRecord
+	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1 AND is_deleted = false"
+	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userID)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var shortURL, originalURL string
+		err := rows.Scan(&shortURL, &originalURL)
+		if err != nil {
+			return nil, err
+		}
+
+		usersURL := models.SimpleURLRecord{
+			ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, shortURL, req),
+			OriginalURL: originalURL,
+		}
+		usersUrls = append(usersUrls, usersURL)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	return usersUrls, nil
+}
+
+// Delete удаляет данные о сокращенном URL из хранилища. При запросе пользователя удаление происходит не сразу, и просто ставится пометка об удалении.
+func (dbData PostgreDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
+	g := new(errgroup.Group)
+	g.Go(func() error {
+		err := deletionRecepient(ctx, dbData.DatabaseConnection, urlsToDelete, userID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deletionRecepient(ctx context.Context, dbConnection *sql.DB, urlsToDelete []string, userID string) error {
+	stmt := "UPDATE url_records SET is_deleted = true WHERE short_url = ANY($1) AND user_id = $2"
+	_, err := dbConnection.ExecContext(ctx, stmt, urlsToDelete, userID)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

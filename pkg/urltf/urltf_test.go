@@ -4,14 +4,10 @@ import (
 	"log"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/database"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_encodeURL(t *testing.T) {
-	db := database.NewDBFromFile("tmp/test.json")
-	defer db.Close()
-
 	tests := []struct {
 		name            string
 		longURL         []byte
@@ -42,5 +38,11 @@ func Test_encodeURL(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantURLLength, len(newURL))
 		})
+	}
+}
+
+func BenchmarkEncodeURL(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		EncodeURL([]byte("https://music.yandex.ru/home"), 8)
 	}
 }

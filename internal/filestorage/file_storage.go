@@ -9,6 +9,7 @@ import (
 	"github.com/Mobrick/name-shortener/internal/models"
 )
 
+// LoadURLRecords возвращает данные по URL из файла
 func LoadURLRecords(file *os.File) ([]models.URLRecord, error) {
 	scanner := bufio.NewScanner(file)
 	var records []models.URLRecord
@@ -26,6 +27,7 @@ func LoadURLRecords(file *os.File) ([]models.URLRecord, error) {
 	return records, nil
 }
 
+// UploadNewURLRecord загружает в файл-хранилище данные по новому URL.
 func UploadNewURLRecord(newRecord models.URLRecord, file *os.File) error {
 	// На случай если флаг адреса файла был пуст, пропускаем добавление в файл
 	if file == nil {
@@ -39,7 +41,8 @@ func UploadNewURLRecord(newRecord models.URLRecord, file *os.File) error {
 	return nil
 }
 
-func MakeFile(fileName string) (*os.File, error) {	
+// MakeFile создает файл если его не существовало.
+func MakeFile(fileName string) (*os.File, error) {
 	// На случай если флаг адреса файла был пуст, открытие файла
 	if len(fileName) == 0 {
 		return nil, nil

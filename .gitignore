@@ -13,6 +13,7 @@ tmp/
 
 # LocalData
 connection.txt
+trash.txt
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// MakeResultShortenedURL создает адрес для ответа пользователю по полученному сокращенному URL.
 func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Request) string {
 	if !strings.HasSuffix(shortAddress, "/") {
 		shortAddress += "/"
@@ -23,6 +24,7 @@ func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Requ
 	return shortAddress
 }
 
+// EncodeURL сокращает URL с помощью рандома и хэша.
 func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 	var newURL string
 
@@ -34,6 +36,6 @@ func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 
 	encodedHash := base64.URLEncoding.EncodeToString(hash)
 	newURL = encodedHash[:shortURLLength]
-	
+
 	return newURL, nil
 }

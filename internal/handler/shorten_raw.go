@@ -4,13 +4,16 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/logger"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/internal/logger"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"go.uber.org/zap"
 )
 
-func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) {
+// LongURLHandle возвращает сокращенный адрес.
+func (env Env) LongURLHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
+
+	userID, _ := GetUserIDFromRequest(req)
 
 	urlToShorten, err := io.ReadAll(io.Reader(req.Body))
 	if err != nil {
@@ -26,13 +29,14 @@ func (env HandlerEnv) LongURLHandle(res http.ResponseWriter, req *http.Request) 
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
 	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userID)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

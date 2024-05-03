@@ -5,16 +5,19 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Mobrick/name-shortener/internal/logger"
 	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/logger"
-	"github.com/Mobrick/name-shortener/urltf"
+	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"go.uber.org/zap"
 )
 
-func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
+// LongURLFromJSONHandle обрабатывает тело запроса в формате JSON и возвращает сокращенный адрес.
+func (env Env) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	var request models.Request
 	var buf bytes.Buffer
+
+	userID, _ := GetUserIDFromRequest(req)
 
 	// читаем тело запроса
 	_, err := buf.ReadFrom(req.Body)
@@ -28,6 +31,12 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if len(request.URL) == 0 {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	storage := env.Storage
 
 	urlToShorten := []byte(request.URL)
@@ -36,13 +45,13 @@ func (env HandlerEnv) LongURLFromJSONHandle(res http.ResponseWriter, req *http.R
 
 	encodedURL, err := urltf.EncodeURL(urlToShorten, ShortURLLength)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))		
+		logger.Log.Debug("could not copmplete url encoding", zap.String("URL to encode", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
-	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten))
+	existingShortURL, err := storage.Add(ctx, encodedURL, string(urlToShorten), userID)
 	if err != nil {
-		logger.Log.Debug("could not copmplete url storaging", zap.String("URL to shorten", string(urlToShorten)))		
+		logger.Log.Debug("could not complete url storaging", zap.String("URL to shorten", string(urlToShorten)))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

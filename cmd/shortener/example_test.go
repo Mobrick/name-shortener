@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,16 +11,38 @@ import (
 
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/internal/config"
-	"github.com/Mobrick/name-shortener/internal/database"
 	"github.com/Mobrick/name-shortener/internal/handler"
 	"github.com/Mobrick/name-shortener/internal/logger"
+	"github.com/Mobrick/name-shortener/internal/mocks"
 	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
 
-func main() {
+func ExampleEnv_ShortenedURLHandle() {
+	env := &handler.Env{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	defer env.Storage.Close()
+
+	r := chi.NewRouter()
+
+	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
+
+	server := &http.Server{
+		Addr:    env.ConfigStruct.FlagRunAddr,
+		Handler: r,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Пример с мидлварями
+func ExampleEnv_LongURLFromJSONHandle() {
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
@@ -34,14 +55,6 @@ func main() {
 	cfg := config.MakeConfig()
 
 	sugar.Info(cfg.FlagDBConnectionAddress + " " + cfg.FlagFileStoragePath)
-	// Определение типа стораджа и создание соотвествующего объекта чтобы потом положить в хендлер
-
-	env := &handler.Env{
-		ConfigStruct: cfg,
-		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
-	}
-	// Добавить Close в интерфейс и закрвать через интерфейс
-	defer env.Storage.Close()
 
 	r := chi.NewRouter()
 
@@ -49,26 +62,38 @@ func main() {
 	r.Use(compression.DecompressMiddleware)
 	r.Use(logger.LoggingMiddleware)
 	r.Use(userauth.CookieMiddleware)
-
-	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
-	r.Get(`/ping`, env.PingDBHandle)
-	r.Get(`/api/user/urls`, env.UserUrlsHandler)
+	env := &handler.Env{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	defer env.Storage.Close()
 
 	r.Post(`/`, env.LongURLHandle)
-	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)
-	r.Post(`/api/shorten/batch`, env.BatchHandler)
+
+	server := &http.Server{
+		Addr:    env.ConfigStruct.FlagRunAddr,
+		Handler: r,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Пример с красивой остановкой сервера
+func ExampleEnv_DeleteUserUsrlsHandler() {
+	env := &handler.Env{
+		Storage:      mocks.NewMockDB(),
+		ConfigStruct: config.MakeConfig(),
+	}
+	defer env.Storage.Close()
+
+	r := chi.NewRouter()
 
 	r.Delete(`/api/user/urls`, env.DeleteUserUsrlsHandler)
 
-	r.Mount("/debug", middleware.Profiler())
-
-	sugar.Infow(
-		"Starting server",
-		"addr", cfg.FlagShortURLBaseAddr,
-	)
-
 	server := &http.Server{
-		Addr:    cfg.FlagRunAddr,
+		Addr:    env.ConfigStruct.FlagRunAddr,
 		Handler: r,
 	}
 
@@ -90,5 +115,4 @@ func main() {
 	}
 
 	env.Storage.Close()
-	sugar.Infow("Server stopped")
 }
