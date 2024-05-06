@@ -7,12 +7,14 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// PreallocSettings Структура настроек для анализатора prealloc
 type PreallocSettings struct {
 	Simple     bool
 	RangeLoops bool `mapstructure:"range-loops"`
 	ForLoops   bool `mapstructure:"for-loops"`
 }
 
+// NewAnalyzer Создает новый анализатора на основе пакета alexkohler/prealloc
 func NewAnalyzer() *analysis.Analyzer {
 
 	preallocSettings := PreallocSettings{

@@ -9,6 +9,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// OSExitAnalyzer переменная анализатора, который проверяет есть в файле main.go в фунции main прямой вызов os.Exit
 var OSExitAnalyzer = &analysis.Analyzer{
 	Name: "goexit",
 	Doc:  "check main func in main file if it uses direct call of os.Exit",

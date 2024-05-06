@@ -8,6 +8,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// GoConstSettings Структура настроек для анализатора GoConst
 type GoConstSettings struct {
 	IgnoreStrings       string `mapstructure:"ignore-strings"`
 	IgnoreTests         bool   `mapstructure:"ignore-tests"`
@@ -20,6 +21,8 @@ type GoConstSettings struct {
 	IgnoreCalls         bool   `mapstructure:"ignore-calls"`
 }
 
+
+// NewAnalyzer Создает новый анализатора на основе пакета jgautheron/goconst
 func NewAnalyzer() *analysis.Analyzer {
 	goconstSettings := GoConstSettings{
 		MatchWithConstants:  true,
