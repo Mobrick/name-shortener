@@ -21,7 +21,6 @@ type GoConstSettings struct {
 	IgnoreCalls         bool   `mapstructure:"ignore-calls"`
 }
 
-
 // NewAnalyzer Создает новый анализатора на основе пакета jgautheron/goconst
 func NewAnalyzer() *analysis.Analyzer {
 	goconstSettings := GoConstSettings{
