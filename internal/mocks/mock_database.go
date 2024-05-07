@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/database"
@@ -66,5 +67,5 @@ func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string,
 
 // PingDB пингует подключение к бд.
 func (dbData MockDB) PingDB() error {
-	return nil
+	return errors.New("no connection to database")
 }
