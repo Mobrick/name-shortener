@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -21,7 +22,16 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 func main() {
+	fmt.Printf("Build version: %s", buildVersion)
+	fmt.Printf("Build date: %s", buildDate)
+	fmt.Printf("Build commit: %s", buildCommit)
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
