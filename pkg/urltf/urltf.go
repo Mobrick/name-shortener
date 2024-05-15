@@ -3,6 +3,7 @@ package urltf
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -27,6 +28,10 @@ func MakeResultShortenedURL(shortAddress string, shortURL string, req *http.Requ
 // EncodeURL сокращает URL с помощью рандома и хэша.
 func EncodeURL(longURL []byte, shortURLLength int) (string, error) {
 	var newURL string
+
+	if shortURLLength <= 0 {
+		return "", errors.New("expected length is not valid")
+	}
 
 	hash := make([]byte, shortURLLength)
 	_, err := rand.Read(hash)

@@ -1,6 +1,7 @@
 package userauth
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -74,6 +75,10 @@ func GetUserID(tokenString string) (string, bool) {
 
 // CreateNewCookie - создание новой куки для юзера если такой куки не существует или она не проходит проверку подлинности.
 func CreateNewCookie(newID string) (http.Cookie, error) {
+	if len(newID) == 0 {
+		return http.Cookie{}, errors.New("no id to put into cookie")
+	}
+
 	tokenString, err := buildJWTString(newID)
 	if err != nil {
 		return http.Cookie{}, err
@@ -99,7 +104,6 @@ func buildJWTString(newID string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
 		},
 		// собственное утверждение
-
 		UserID: newID,
 	})
 
