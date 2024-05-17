@@ -71,12 +71,13 @@ func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID 
 	var result []models.URLRecord
 	for _, urlRecord := range dbData.URLRecords {
 		if urlRecord.UserID != userID {
+			result = append(result, urlRecord)
 			continue
 		}
 		if !slices.Contains(urlsToDelete, urlRecord.ShortURL) {
+			result = append(result, urlRecord)
 			continue
 		}
-		result = append(result, urlRecord)
 	}
 	dbData.URLRecords = result
 	return nil

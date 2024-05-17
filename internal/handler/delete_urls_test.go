@@ -95,3 +95,39 @@ func BenchmarkDeleteUserUsrlsHandler(b *testing.B) {
 		env.DeleteUserUsrlsHandler(w, request)
 	}
 }
+
+func Test_parseRequestBody(t *testing.T) {
+	tests := []struct {
+		name      string
+		bodySlice []string
+		want      []string
+		wantErr   bool
+	}{
+		{
+			name: "positive parse test #1",
+			bodySlice: []string{
+				"6qxTVvsy", "RTfd56hn", "Jlfd67ds",
+			},
+			want: []string{
+				"6qxTVvsy", "RTfd56hn", "Jlfd67ds",
+			},
+			wantErr: false,
+		},
+		{
+			name:      "positive parse test #2",
+			bodySlice: []string{},
+			want:      []string{},
+			wantErr:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.bodySlice)
+			require.NoError(t, err)
+			request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
+			got, err := parseRequestBody(request)
+			assert.ElementsMatch(t, tt.want, got)
+			assert.Equal(t, tt.wantErr, err != nil)
+		})
+	}
+}
