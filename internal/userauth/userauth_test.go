@@ -166,6 +166,7 @@ func TestCookieMiddleware(t *testing.T) {
 			rr := httptest.NewRecorder()
 			cookieMiddleware.ServeHTTP(rr, req)
 			cookies := rr.Result().Cookies()
+			defer rr.Result().Body.Close()
 			assert.Equal(t, tt.wantCookieCount, len(cookies))
 			assert.Equal(t, tt.wantCookieName, cookies[0].Name)
 		})
