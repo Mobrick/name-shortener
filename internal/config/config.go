@@ -1,12 +1,17 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"log"
 	"os"
+
+	"github.com/Mobrick/name-shortener/internal/models"
 )
 
 // Config хранит данные по флагам.
 type Config struct {
+	FlagConfigFile          string // имя файла конфигурации
 	FlagRunAddr             string // адрес на котором запущен сервер
 	FlagShortURLBaseAddr    string // базовый адрес сокращенного URL
 	FlagLogLevel            string // уровень логировани
@@ -22,6 +27,9 @@ type Config struct {
 func MakeConfig() *Config {
 	config := &Config{}
 
+	if flag.Lookup("c") == nil {
+		flag.StringVar(&config.FlagRunAddr, "c", "", "configuration file name")
+	}
 	if flag.Lookup("a") == nil {
 		flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
 	}
@@ -42,6 +50,10 @@ func MakeConfig() *Config {
 	}
 
 	flag.Parse()
+
+	if envConfig := os.Getenv("CONFIG"); envConfig != "" {
+		config.FlagConfigFile = envConfig
+	}
 
 	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
 		config.FlagRunAddr = envRunAddr
@@ -70,5 +82,46 @@ func MakeConfig() *Config {
 	config.CertFilepath = "tls/cert.cer"
 	config.KeyFilepath = "tls/key.cer"
 
+	if config.FlagConfigFile != "" {
+		configFromFile, err := getConfigFromFile(config.FlagConfigFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if config.FlagRunAddr == "" {
+			config.FlagRunAddr = configFromFile.ServerAddress
+		}
+
+		if config.FlagShortURLBaseAddr == "" {
+			config.FlagShortURLBaseAddr = configFromFile.BaseURL
+		}
+
+		if config.FlagFileStoragePath == "" {
+			config.FlagFileStoragePath = configFromFile.FileStoragePath
+		}
+
+		if config.FlagDBConnectionAddress == "" {
+			config.FlagDBConnectionAddress = configFromFile.DatabaseDsn
+		}
+
+		if !config.FlagEnableHTTPS {
+			config.FlagEnableHTTPS = configFromFile.EnableHTTPS
+		}
+	}
+
 	return config
+}
+
+func getConfigFromFile(filename string) (models.ConfigFromFile, error) {
+	var config models.ConfigFromFile
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return config, err
+	}
+
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return config, err
+	}
+	return config, nil
 }
