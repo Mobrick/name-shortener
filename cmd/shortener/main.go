@@ -83,8 +83,14 @@ func main() {
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+		if cfg.FlagEnableHTTPS {
+			if err := server.ListenAndServeTLS(cfg.CertFilepath, cfg.KeyFilepath); err != nil && err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
+		} else {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
 		}
 	}()
 

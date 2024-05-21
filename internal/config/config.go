@@ -12,6 +12,10 @@ type Config struct {
 	FlagLogLevel            string // уровень логировани
 	FlagFileStoragePath     string // путь к файлу с сохраненными URL
 	FlagDBConnectionAddress string // строка подключения к БД
+	FlagEnableHTTPS         bool   // использовать ли HTTPS
+
+	CertFilepath string // Путь к сертификату
+	KeyFilepath  string // Путь к ключу
 }
 
 // MakeConfig формирует конфигурацию по флагам, либо если есть, по переменным окружения.
@@ -32,6 +36,9 @@ func MakeConfig() *Config {
 	}
 	if flag.Lookup("d") == nil {
 		flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	}
+	if flag.Lookup("s") == nil {
+		flag.BoolVar(&config.FlagEnableHTTPS, "s", false, "database connection address")
 	}
 
 	flag.Parse()
@@ -55,6 +62,13 @@ func MakeConfig() *Config {
 	if envDBConnectionAddress := os.Getenv("DATABASE_DSN"); envDBConnectionAddress != "" {
 		config.FlagDBConnectionAddress = envDBConnectionAddress
 	}
+
+	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS != "" {
+		config.FlagEnableHTTPS = true
+	}
+
+	config.CertFilepath = "tls/cert.cer"
+	config.KeyFilepath = "tls/key.cer"
 
 	return config
 }
