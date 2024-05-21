@@ -37,6 +37,7 @@ type SimpleURLRecord struct {
 	OriginalURL string `json:"original_url"`
 }
 
+// ConfigFromFile модель использующаяся при парсинге конфигурационного файла при старте сервера
 type ConfigFromFile struct {
 	ServerAddress   string `json:"server_address"`
 	BaseURL         string `json:"base_url"`
