@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/handler"
 	"github.com/Mobrick/name-shortener/internal/logger"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -61,7 +61,7 @@ func ExampleEnv_LongURLFromJSONHandle() {
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 	r.Use(compression.DecompressMiddleware)
 	r.Use(logger.LoggingMiddleware)
-	r.Use(userauth.CookieMiddleware)
+	r.Use(auth.CookieMiddleware)
 	env := &handler.Env{
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),

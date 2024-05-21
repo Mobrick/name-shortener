@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -28,8 +28,8 @@ func (dbData PostgreDB) PingDB() error {
 }
 
 // AddMany добавляет множество данных о сокращенных URL в хранилище.
-func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
-	var sliceOfRecords []models.URLRecord
+func (dbData PostgreDB) AddMany(ctx context.Context, shortURLRequestMap map[string]model.BatchRequestURL, userID string) error {
+	var sliceOfRecords []model.URLRecord
 	for shortURL, record := range shortURLRequestMap {
 		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		sliceOfRecords = append(sliceOfRecords, newRecord)
@@ -138,8 +138,8 @@ func (dbData PostgreDB) Close() {
 }
 
 // GetUrlsByUserID возвращает записи созданные пользователем.
-func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
-	var usersUrls []models.SimpleURLRecord
+func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]model.SimpleURLRecord, error) {
+	var usersUrls []model.SimpleURLRecord
 	stmt := "SELECT short_url, original_url FROM url_records WHERE user_id = $1 AND is_deleted = false"
 	rows, err := dbData.DatabaseConnection.QueryContext(ctx, stmt, userID)
 	if err != nil {
@@ -152,7 +152,7 @@ func (dbData PostgreDB) GetUrlsByUserID(ctx context.Context, userID string, host
 			return nil, err
 		}
 
-		usersURL := models.SimpleURLRecord{
+		usersURL := model.SimpleURLRecord{
 			ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, shortURL, req),
 			OriginalURL: originalURL,
 		}

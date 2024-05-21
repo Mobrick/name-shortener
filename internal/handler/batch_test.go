@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,12 +29,12 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		body []models.BatchRequestURL
+		body []model.BatchRequestURL
 		want want
 	}{
 		{
 			name: "positive shorten test #1",
-			body: []models.BatchRequestURL{{
+			body: []model.BatchRequestURL{{
 				CorrelationID: "1234",
 				OriginalURL:   "https://www.google.com/",
 			}, {
@@ -48,7 +48,7 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 		},
 		{
 			name: "empty shorten test #1",
-			body: []models.BatchRequestURL{},
+			body: []model.BatchRequestURL{},
 			want: want{
 				code:        400,
 				contentType: "",
@@ -65,7 +65,7 @@ func TestHandlerEnv_BatchHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(body))
 			w := httptest.NewRecorder()
 
-			cookie, err := userauth.CreateNewCookie(uuid.New().String())
+			cookie, err := auth.CreateNewCookie(uuid.New().String())
 			if err != nil {
 				assert.Error(t, err, err.Error())
 				return
@@ -90,7 +90,7 @@ func BenchmarkBatchHandler(b *testing.B) {
 		ConfigStruct: config.MakeConfig(),
 	}
 
-	bodySlice := []models.BatchRequestURL{{
+	bodySlice := []model.BatchRequestURL{{
 		CorrelationID: "1234",
 		OriginalURL:   "https://www.google.com/",
 	}, {
@@ -105,7 +105,7 @@ func BenchmarkBatchHandler(b *testing.B) {
 
 	request := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	cookie, err := auth.CreateNewCookie(uuid.New().String())
 	if err != nil {
 		return
 	}

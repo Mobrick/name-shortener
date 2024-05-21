@@ -1,4 +1,4 @@
-package models
+package model
 
 // BatchRequestURL модель использующаяся при парсинге запроса на множественное сокращение.
 type BatchRequestURL struct {

@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,7 +55,7 @@ func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			cookie, err := userauth.CreateNewCookie(test.id)
+			cookie, err := auth.CreateNewCookie(test.id)
 			if err != nil {
 				assert.Error(t, err, err.Error())
 				return
@@ -67,7 +67,7 @@ func TestHandlerEnv_UserUrlsHandler(t *testing.T) {
 			res := w.Result()
 			defer res.Body.Close()
 
-			var urls []models.SimpleURLRecord
+			var urls []model.SimpleURLRecord
 
 			var buf bytes.Buffer
 			_, err = buf.ReadFrom(res.Body)
@@ -93,7 +93,7 @@ func BenchmarkUserUrlsHandler(b *testing.B) {
 	}
 	request := httptest.NewRequest(http.MethodGet, "/api/user/urls", nil)
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie("1a91a181-80ec-45cb-a576-14db11505700")
+	cookie, err := auth.CreateNewCookie("1a91a181-80ec-45cb-a576-14db11505700")
 	if err != nil {
 		return
 	}

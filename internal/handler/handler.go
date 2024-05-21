@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/database"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 )
 
 // Env - структура окружения для хендлеров, в которой хранятся данные о хранилище и ссылка на конфигурацию
@@ -29,7 +29,7 @@ func GetUserIDFromRequest(req *http.Request) (string, bool) {
 	}
 
 	token := cookie.Value
-	userID, ok := userauth.GetUserID(token)
+	userID, ok := auth.GetUserID(token)
 	if !ok {
 		log.Printf("invalid token")
 		return "", false

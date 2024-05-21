@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,14 +44,14 @@ func TestUploadNewURLRecord(t *testing.T) {
 	tests := []struct {
 		name         string
 		fileName     string
-		record       models.URLRecord
+		record       model.URLRecord
 		wantHasNoErr bool
 	}{
 		{
 			name:         "positive upload file #1",
 			fileName:     "tmp/test/storage",
 			wantHasNoErr: true,
-			record: models.URLRecord{
+			record: model.URLRecord{
 				UUID:        "1",
 				ShortURL:    "gg",
 				OriginalURL: "https://www.go.com/",
@@ -63,7 +63,7 @@ func TestUploadNewURLRecord(t *testing.T) {
 			name:         "positive upload file #2",
 			fileName:     "",
 			wantHasNoErr: true,
-			record: models.URLRecord{
+			record: model.URLRecord{
 				UUID:        "1",
 				ShortURL:    "gg",
 				OriginalURL: "https://www.go.com/",
@@ -87,7 +87,7 @@ func TestLoadURLRecords(t *testing.T) {
 	tests := []struct {
 		name             string
 		fileName         string
-		records          []models.URLRecord
+		records          []model.URLRecord
 		wantHasNoErr     bool
 		wantRecordsCount int
 	}{
@@ -96,7 +96,7 @@ func TestLoadURLRecords(t *testing.T) {
 			fileName:         "tmp/test/storage.json",
 			wantHasNoErr:     true,
 			wantRecordsCount: 2,
-			records: []models.URLRecord{
+			records: []model.URLRecord{
 				{
 					UUID:        "1",
 					ShortURL:    "gg",
@@ -118,7 +118,7 @@ func TestLoadURLRecords(t *testing.T) {
 			fileName:         "",
 			wantHasNoErr:     true,
 			wantRecordsCount: 0,
-			records:          []models.URLRecord{},
+			records:          []model.URLRecord{},
 		},
 	}
 	for _, tt := range tests {

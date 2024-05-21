@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 )
 
 // Config хранит данные по флагам.
@@ -112,8 +112,8 @@ func MakeConfig() *Config {
 	return config
 }
 
-func getConfigFromFile(filename string) (models.ConfigFromFile, error) {
-	var config models.ConfigFromFile
+func getConfigFromFile(filename string) (model.ConfigFromFile, error) {
+	var config model.ConfigFromFile
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return config, err

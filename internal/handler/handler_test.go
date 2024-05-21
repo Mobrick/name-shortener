@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +45,7 @@ func TestGetUserIDFromRequest(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			request := test.request
 			if test.createCookie {
-				cookie, err := userauth.CreateNewCookie(test.want.userID)
+				cookie, err := auth.CreateNewCookie(test.want.userID)
 				if err != nil {
 					assert.Error(t, err, err.Error())
 					return

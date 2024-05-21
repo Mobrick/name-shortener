@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -86,7 +86,7 @@ func BenchmarkDeleteUserUsrlsHandler(b *testing.B) {
 
 	request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	cookie, err := auth.CreateNewCookie(uuid.New().String())
 	if err != nil {
 		return
 	}

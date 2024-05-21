@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/logger"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 	"go.uber.org/zap"
 )
@@ -14,7 +14,7 @@ import (
 // LongURLFromJSONHandle обрабатывает тело запроса в формате JSON и возвращает сокращенный адрес.
 func (env Env) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	var request models.Request
+	var request model.Request
 	var buf bytes.Buffer
 
 	userID, _ := GetUserIDFromRequest(req)
@@ -56,15 +56,15 @@ func (env Env) LongURLFromJSONHandle(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	var response models.Response
+	var response model.Response
 	var status int
 	if len(existingShortURL) != 0 {
-		response = models.Response{
+		response = model.Response{
 			Result: urltf.MakeResultShortenedURL(hostAndPathPart, existingShortURL, req),
 		}
 		status = http.StatusConflict
 	} else {
-		response = models.Response{
+		response = model.Response{
 			Result: urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req),
 		}
 		status = http.StatusCreated

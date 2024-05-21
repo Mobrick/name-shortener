@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/database"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 )
@@ -107,7 +107,7 @@ func BenchmarkShortenedURLHandle(b *testing.B) {
 	request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, requestContext))
 
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie("1a91a181-80ec-45cb-a576-14db11505700")
+	cookie, err := auth.CreateNewCookie("1a91a181-80ec-45cb-a576-14db11505700")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
