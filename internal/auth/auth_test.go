@@ -1,4 +1,4 @@
-package userauth
+package auth
 
 import (
 	"net/http"
@@ -142,7 +142,8 @@ func Test_cookieIsValid(t *testing.T) {
 
 func TestCookieMiddleware(t *testing.T) {
 	type args struct {
-		h http.Handler
+		h         http.Handler
+		useCookie bool
 	}
 	tests := []struct {
 		name            string
@@ -151,25 +152,41 @@ func TestCookieMiddleware(t *testing.T) {
 		wantCookieCount int
 	}{
 		{
-			name: "positive cookie muddleware test #1",
+			name: "positive cookie middleware test #1",
 			args: args{
-				h: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+				h:         http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+				useCookie: true,
 			},
 			wantCookieName:  "auth_token",
 			wantCookieCount: 1,
 		},
+		{
+			name: "negative cookie middleware test #1",
+			args: args{
+				h:         http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+				useCookie: false,
+			},
+			wantCookieName:  "",
+			wantCookieCount: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cookieMiddleware := CookieMiddleware(tt.args.h)
+
 			req := httptest.NewRequest("GET", "/", nil)
 			rr := httptest.NewRecorder()
-			cookieMiddleware.ServeHTTP(rr, req)
+			if tt.args.useCookie {
+				cookieMiddleware := CookieMiddleware(tt.args.h)
+				cookieMiddleware.ServeHTTP(rr, req)
+
+			}
 			result := rr.Result()
 			cookies := result.Cookies()
 			defer result.Body.Close()
 			assert.Equal(t, tt.wantCookieCount, len(cookies))
-			assert.Equal(t, tt.wantCookieName, cookies[0].Name)
+			if len(cookies) > 0 {
+				assert.Equal(t, tt.wantCookieName, cookies[0].Name)
+			}
 		})
 	}
 }

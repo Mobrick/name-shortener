@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/Mobrick/name-shortener/internal/filestorage"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,7 +57,7 @@ func TestFileDB_Get(t *testing.T) {
 		{
 			name: "positive get in memory #1",
 			dbData: FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -96,7 +96,7 @@ func TestFileDB_Get(t *testing.T) {
 		}, {
 			name: "positive get in memory #1",
 			dbData: FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -155,12 +155,12 @@ func TestFileDB_Add(t *testing.T) {
 		name       string
 		dbData     *FileDB
 		args       args
-		wantRecord models.URLRecord
+		wantRecord model.URLRecord
 	}{
 		{
 			name: "positive add test #1",
 			dbData: &FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "2",
 						ShortURL:    "gog",
@@ -187,7 +187,7 @@ func TestFileDB_Add(t *testing.T) {
 				originalURL: "https://www.go.com/",
 				userID:      "1u",
 			},
-			wantRecord: models.URLRecord{
+			wantRecord: model.URLRecord{
 				ShortURL:    "gg",
 				OriginalURL: "https://www.go.com/",
 				UserID:      "1u",
@@ -197,7 +197,7 @@ func TestFileDB_Add(t *testing.T) {
 		{
 			name: "positive add test #2",
 			dbData: &FileDB{
-				URLRecords:  []models.URLRecord{},
+				URLRecords:  []model.URLRecord{},
 				DatabaseMap: map[string]string{},
 			},
 			args: args{
@@ -206,7 +206,7 @@ func TestFileDB_Add(t *testing.T) {
 				originalURL: "https://www.go.com/",
 				userID:      "1u",
 			},
-			wantRecord: models.URLRecord{
+			wantRecord: model.URLRecord{
 				ShortURL:    "gg",
 				OriginalURL: "https://www.go.com/",
 				UserID:      "1u",
@@ -216,7 +216,7 @@ func TestFileDB_Add(t *testing.T) {
 		{
 			name: "positive add test #3",
 			dbData: &FileDB{
-				URLRecords:  []models.URLRecord{},
+				URLRecords:  []model.URLRecord{},
 				DatabaseMap: map[string]string{},
 			},
 			args: args{
@@ -225,7 +225,7 @@ func TestFileDB_Add(t *testing.T) {
 				originalURL: "go.com/",
 				userID:      "",
 			},
-			wantRecord: models.URLRecord{
+			wantRecord: model.URLRecord{
 				ShortURL:    "gg",
 				OriginalURL: "go.com/",
 				UserID:      "",
@@ -235,7 +235,7 @@ func TestFileDB_Add(t *testing.T) {
 		{
 			name: "positive add test #4",
 			dbData: &FileDB{
-				URLRecords:  []models.URLRecord{},
+				URLRecords:  []model.URLRecord{},
 				DatabaseMap: map[string]string{},
 			},
 			args: args{
@@ -243,7 +243,7 @@ func TestFileDB_Add(t *testing.T) {
 				shortURL:    "gg",
 				originalURL: "go.com/",
 			},
-			wantRecord: models.URLRecord{
+			wantRecord: model.URLRecord{
 				ShortURL:    "gg",
 				OriginalURL: "go.com/",
 			},
@@ -265,7 +265,7 @@ func TestFileDB_Add(t *testing.T) {
 func TestFileDB_AddMany(t *testing.T) {
 	type args struct {
 		ctx                context.Context
-		shortURLRequestMap map[string]models.BatchRequestURL
+		shortURLRequestMap map[string]model.BatchRequestURL
 		userID             string
 	}
 	tests := []struct {
@@ -278,7 +278,7 @@ func TestFileDB_AddMany(t *testing.T) {
 		{
 			name: "positive add many test #1",
 			dbData: &FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "2",
 						ShortURL:    "gog",
@@ -301,7 +301,7 @@ func TestFileDB_AddMany(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				shortURLRequestMap: map[string]models.BatchRequestURL{
+				shortURLRequestMap: map[string]model.BatchRequestURL{
 					"gg": {
 						CorrelationID: "1",
 						OriginalURL:   "https://www.go.com/",
@@ -316,12 +316,12 @@ func TestFileDB_AddMany(t *testing.T) {
 		}, {
 			name: "positive add many test #1",
 			dbData: &FileDB{
-				URLRecords:  []models.URLRecord{},
+				URLRecords:  []model.URLRecord{},
 				DatabaseMap: map[string]string{},
 			},
 			args: args{
 				ctx: context.Background(),
-				shortURLRequestMap: map[string]models.BatchRequestURL{
+				shortURLRequestMap: map[string]model.BatchRequestURL{
 					"gg": {
 						CorrelationID: "1",
 						OriginalURL:   "https://www.go.com/",
@@ -373,7 +373,7 @@ func TestFileDB_Close(t *testing.T) {
 
 func TestFileDB_GetUrlsByUserID(t *testing.T) {
 	type args struct {
-		urlRecords      []models.URLRecord
+		urlRecords      []model.URLRecord
 		userID          string
 		hostAndPathPart string
 		req             *http.Request
@@ -381,14 +381,14 @@ func TestFileDB_GetUrlsByUserID(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []models.SimpleURLRecord
+		want    []model.SimpleURLRecord
 		wantErr bool
 		dbData  FileDB
 	}{
 		{
 			name: "positive get urls by user test #1",
 			dbData: FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -418,7 +418,7 @@ func TestFileDB_GetUrlsByUserID(t *testing.T) {
 				},
 			},
 			args: args{
-				urlRecords: []models.URLRecord{
+				urlRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -445,7 +445,7 @@ func TestFileDB_GetUrlsByUserID(t *testing.T) {
 				hostAndPathPart: "http://shortener/",
 				req:             httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.go.com/")),
 			},
-			want: []models.SimpleURLRecord{
+			want: []model.SimpleURLRecord{
 				{
 					ShortURL:    "http://shortener/gg",
 					OriginalURL: "https://www.go.com/",
@@ -460,7 +460,7 @@ func TestFileDB_GetUrlsByUserID(t *testing.T) {
 		{
 			name: "positive get urls by user test #1",
 			args: args{
-				urlRecords: []models.URLRecord{
+				urlRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -487,7 +487,7 @@ func TestFileDB_GetUrlsByUserID(t *testing.T) {
 				hostAndPathPart: "http://shortener/",
 				req:             httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.go.com/")),
 			},
-			want:    []models.SimpleURLRecord{},
+			want:    []model.SimpleURLRecord{},
 			wantErr: false,
 		},
 	}
@@ -524,7 +524,7 @@ func TestFileDB_Delete(t *testing.T) {
 				userID:       "1u",
 			},
 			dbData: &FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -564,7 +564,7 @@ func TestFileDB_Delete(t *testing.T) {
 				userID:       "2u",
 			},
 			dbData: &FileDB{
-				URLRecords: []models.URLRecord{
+				URLRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",

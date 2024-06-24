@@ -6,17 +6,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 )
 
 // LoadURLRecords возвращает данные по URL из файла
-func LoadURLRecords(file *os.File) ([]models.URLRecord, error) {
+func LoadURLRecords(file *os.File) ([]model.URLRecord, error) {
 	scanner := bufio.NewScanner(file)
-	var records []models.URLRecord
+	var records []model.URLRecord
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
-		var record models.URLRecord
+		var record model.URLRecord
 		err := json.Unmarshal(line, &record)
 		if err != nil {
 			return nil, err
@@ -28,7 +28,7 @@ func LoadURLRecords(file *os.File) ([]models.URLRecord, error) {
 }
 
 // UploadNewURLRecord загружает в файл-хранилище данные по новому URL.
-func UploadNewURLRecord(newRecord models.URLRecord, file *os.File) error {
+func UploadNewURLRecord(newRecord model.URLRecord, file *os.File) error {
 	// На случай если флаг адреса файла был пуст, пропускаем добавление в файл
 	if file == nil {
 		return nil

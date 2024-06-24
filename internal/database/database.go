@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/filestorage"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -20,7 +20,7 @@ type Storage interface {
 	Add(context.Context, string, string, string) (string, error)
 
 	// AddMany добавляет множество данных о сокращенных URL в хранилище.
-	AddMany(context.Context, map[string]models.BatchRequestURL, string) error
+	AddMany(context.Context, map[string]model.BatchRequestURL, string) error
 
 	// Close закрывает подключение к хранилищу.
 	Close()
@@ -32,7 +32,7 @@ type Storage interface {
 	Get(context.Context, string) (string, bool, error)
 
 	// GetUrlsByUserID возвращает записи созданные пользователем.
-	GetUrlsByUserID(context.Context, string, string, *http.Request) ([]models.SimpleURLRecord, error)
+	GetUrlsByUserID(context.Context, string, string, *http.Request) ([]model.SimpleURLRecord, error)
 
 	// PingDB пингует подключение к бд.
 	PingDB() error
@@ -52,7 +52,7 @@ func NewDB(fileName string, connectionString string) Storage {
 		dbData = newDBFromFile(fileName)
 	default:
 		dbData = &InMemoryDB{
-			URLRecords:  make([]models.URLRecord, 0),
+			URLRecords:  make([]model.URLRecord, 0),
 			DatabaseMap: make(map[string]string),
 		}
 	}
@@ -94,7 +94,7 @@ func newDBConnection(connectionString string) *sql.DB {
 	return db
 }
 
-func dbMapFromURLRecords(urlRecords []models.URLRecord) map[string]string {
+func dbMapFromURLRecords(urlRecords []model.URLRecord) map[string]string {
 	dbMap := make(map[string]string)
 	for _, urlRecord := range urlRecords {
 		dbMap[urlRecord.ShortURL] = urlRecord.OriginalURL
@@ -103,8 +103,8 @@ func dbMapFromURLRecords(urlRecords []models.URLRecord) map[string]string {
 }
 
 // CreateRecordAndUpdateDBMap создает запись в памяти и вписывает её в мапу.
-func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, shortURL string, id string, userID string) models.URLRecord {
-	newRecord := models.URLRecord{
+func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, shortURL string, id string, userID string) model.URLRecord {
+	newRecord := model.URLRecord{
 		OriginalURL: originalURL,
 		ShortURL:    shortURL,
 		UUID:        id,
@@ -116,11 +116,11 @@ func CreateRecordAndUpdateDBMap(dbMap map[string]string, originalURL string, sho
 }
 
 // GetUrlsCreatedByUser возвращает URL которые создал текущий пользователь.
-func GetUrlsCreatedByUser(urlRecords []models.URLRecord, userID string, hostAndPathPart string, req *http.Request) []models.SimpleURLRecord {
-	var usersUrls []models.SimpleURLRecord
+func GetUrlsCreatedByUser(urlRecords []model.URLRecord, userID string, hostAndPathPart string, req *http.Request) []model.SimpleURLRecord {
+	var usersUrls []model.SimpleURLRecord
 	for _, urlRecord := range urlRecords {
 		if urlRecord.UserID == userID && !urlRecord.DeletedFlag {
-			usersURL := models.SimpleURLRecord{
+			usersURL := model.SimpleURLRecord{
 				ShortURL:    urltf.MakeResultShortenedURL(hostAndPathPart, urlRecord.ShortURL, req),
 				OriginalURL: urlRecord.OriginalURL,
 			}

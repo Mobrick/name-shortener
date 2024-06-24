@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,7 +77,7 @@ func TestCreateRecordAndUpdateDBMap(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want models.URLRecord
+		want model.URLRecord
 	}{
 		{
 			name: "positive create record #1",
@@ -88,7 +88,7 @@ func TestCreateRecordAndUpdateDBMap(t *testing.T) {
 				originalURL: "https://www.go.com/",
 				userID:      "1u",
 			},
-			want: models.URLRecord{
+			want: model.URLRecord{
 				UUID:        "1",
 				ShortURL:    "gg",
 				OriginalURL: "https://www.go.com/",
@@ -104,7 +104,7 @@ func TestCreateRecordAndUpdateDBMap(t *testing.T) {
 				originalURL: "https://www.google.com/",
 				userID:      "1u",
 			},
-			want: models.URLRecord{
+			want: model.URLRecord{
 				UUID:        "2",
 				ShortURL:    "gog",
 				OriginalURL: "https://www.google.com/",
@@ -122,7 +122,7 @@ func TestCreateRecordAndUpdateDBMap(t *testing.T) {
 
 func TestGetUrlsCreatedByUser(t *testing.T) {
 	type args struct {
-		urlRecords      []models.URLRecord
+		urlRecords      []model.URLRecord
 		userID          string
 		hostAndPathPart string
 		req             *http.Request
@@ -130,12 +130,12 @@ func TestGetUrlsCreatedByUser(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []models.SimpleURLRecord
+		want []model.SimpleURLRecord
 	}{
 		{
 			name: "positive get urls by user test #1",
 			args: args{
-				urlRecords: []models.URLRecord{
+				urlRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -162,7 +162,7 @@ func TestGetUrlsCreatedByUser(t *testing.T) {
 				hostAndPathPart: "http://shortener/",
 				req:             httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.go.com/")),
 			},
-			want: []models.SimpleURLRecord{
+			want: []model.SimpleURLRecord{
 				{
 					ShortURL:    "http://shortener/gg",
 					OriginalURL: "https://www.go.com/",
@@ -176,7 +176,7 @@ func TestGetUrlsCreatedByUser(t *testing.T) {
 		{
 			name: "positive get urls by user test #1",
 			args: args{
-				urlRecords: []models.URLRecord{
+				urlRecords: []model.URLRecord{
 					{
 						UUID:        "1",
 						ShortURL:    "gg",
@@ -203,7 +203,7 @@ func TestGetUrlsCreatedByUser(t *testing.T) {
 				hostAndPathPart: "http://shortener/",
 				req:             httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.go.com/")),
 			},
-			want: []models.SimpleURLRecord{},
+			want: []model.SimpleURLRecord{},
 		},
 	}
 	for _, tt := range tests {

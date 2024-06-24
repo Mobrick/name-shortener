@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/compression"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/database"
 	"github.com/Mobrick/name-shortener/internal/handler"
 	"github.com/Mobrick/name-shortener/internal/logger"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -58,7 +58,7 @@ func main() {
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 	r.Use(compression.DecompressMiddleware)
 	r.Use(logger.LoggingMiddleware)
-	r.Use(userauth.CookieMiddleware)
+	r.Use(auth.CookieMiddleware)
 
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
 	r.Get(`/ping`, env.PingDBHandle)
@@ -84,13 +84,19 @@ func main() {
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+		if cfg.FlagEnableHTTPS {
+			if err := server.ListenAndServeTLS(cfg.CertFilepath, cfg.KeyFilepath); err != nil && err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
+		} else {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
 		}
 	}()
 
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	<-stop
 
 	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)

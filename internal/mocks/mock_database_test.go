@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Mobrick/name-shortener/internal/database"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ func TestMockDB_GetUrlsByUserID(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []models.SimpleURLRecord
+		want    []model.SimpleURLRecord
 		wantErr bool
 		dbData  MockDB
 	}{
@@ -69,7 +69,7 @@ func TestMockDB_GetUrlsByUserID(t *testing.T) {
 			args: args{
 				userID: "1a91a181-80ec-45cb-a576-14db11505700",
 			},
-			want: []models.SimpleURLRecord{
+			want: []model.SimpleURLRecord{
 				{
 					ShortURL:    "DDDDdddd",
 					OriginalURL: "https://www.google.com/",
@@ -86,7 +86,7 @@ func TestMockDB_GetUrlsByUserID(t *testing.T) {
 			args: args{
 				userID: "1u",
 			},
-			want:    []models.SimpleURLRecord{},
+			want:    []model.SimpleURLRecord{},
 			wantErr: false,
 		},
 	}

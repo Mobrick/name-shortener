@@ -8,8 +8,8 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
-// GoConstSettings Структура настроек для анализатора GoConst
-type GoConstSettings struct {
+// Settings Структура настроек для анализатора GoConst
+type Settings struct {
 	IgnoreStrings       string `mapstructure:"ignore-strings"`
 	IgnoreTests         bool   `mapstructure:"ignore-tests"`
 	MatchWithConstants  bool   `mapstructure:"match-constant"`
@@ -23,7 +23,7 @@ type GoConstSettings struct {
 
 // NewAnalyzer Создает новый анализатора на основе пакета jgautheron/goconst
 func NewAnalyzer() *analysis.Analyzer {
-	goconstSettings := GoConstSettings{
+	goconstSettings := Settings{
 		MatchWithConstants:  true,
 		MinStringLen:        3,
 		MinOccurrencesCount: 3,
@@ -47,7 +47,7 @@ func NewAnalyzer() *analysis.Analyzer {
 	return analyzer
 }
 
-func runGoconst(pass *analysis.Pass, settings *GoConstSettings) error {
+func runGoconst(pass *analysis.Pass, settings *Settings) error {
 	cfg := goconstAPI.Config{
 		IgnoreStrings:      settings.IgnoreStrings,
 		IgnoreTests:        settings.IgnoreTests,
