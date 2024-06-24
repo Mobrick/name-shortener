@@ -2,10 +2,11 @@ package mocks
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/database"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 )
 
 // MockDB - структура для мока
@@ -26,7 +27,7 @@ func (dbData MockDB) Add(_ context.Context, _ string, encodedURL string, _ strin
 }
 
 // AddMany добавляет множество данных о сокращенных URL в хранилище.
-func (dbData MockDB) AddMany(context.Context, map[string]models.BatchRequestURL, string) error {
+func (dbData MockDB) AddMany(context.Context, map[string]model.BatchRequestURL, string) error {
 	return nil
 }
 
@@ -45,9 +46,9 @@ func (dbData MockDB) Get(context.Context, string) (string, bool, error) {
 }
 
 // GetUrlsByUserID возвращает записи созданные пользователем.
-func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string, _ *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string, _ *http.Request) ([]model.SimpleURLRecord, error) {
 	if userID == "1a91a181-80ec-45cb-a576-14db11505700" {
-		urls := []models.SimpleURLRecord{
+		urls := []model.SimpleURLRecord{
 			{
 				ShortURL:    "DDDDdddd",
 				OriginalURL: "https://www.google.com/",
@@ -59,12 +60,12 @@ func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string,
 		}
 		return urls, nil
 	} else {
-		urls := []models.SimpleURLRecord{}
+		urls := []model.SimpleURLRecord{}
 		return urls, nil
 	}
 }
 
 // PingDB пингует подключение к бд.
 func (dbData MockDB) PingDB() error {
-	return nil
+	return errors.New("no connection to database")
 }

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,11 +58,10 @@ func TestEnv_LongURLHandle(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			request := test.request
 			w := httptest.NewRecorder()
 
-			cookie, err := userauth.CreateNewCookie(uuid.New().String())
+			cookie, err := auth.CreateNewCookie(uuid.New().String())
 			if err != nil {
 				assert.Error(t, err, err.Error())
 				return
@@ -91,7 +90,7 @@ func BenchmarkLongURLHandle(b *testing.B) {
 	}
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("https://www.google.com/"))
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	cookie, err := auth.CreateNewCookie(uuid.New().String())
 	if err != nil {
 		return
 	}

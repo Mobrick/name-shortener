@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Mobrick/name-shortener/internal/logger"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/Mobrick/name-shortener/pkg/urltf"
 )
 
@@ -26,7 +26,7 @@ func (env Env) BatchHandler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var urls []models.BatchRequestURL
+	var urls []model.BatchRequestURL
 	if err = json.Unmarshal(buf.Bytes(), &urls); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
@@ -56,11 +56,11 @@ func (env Env) BatchHandler(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(resp))
 }
 
-func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []models.BatchRequestURL, req *http.Request, userID string) ([]models.BatchResponseURL, error) {
-	responseRecords := make([]models.BatchResponseURL, 0, len(urlsToShorten))
+func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []model.BatchRequestURL, req *http.Request, userID string) ([]model.BatchResponseURL, error) {
+	responseRecords := make([]model.BatchResponseURL, 0, len(urlsToShorten))
 	storage := env.Storage
 	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
-	shortURLRequestMap := make(map[string]models.BatchRequestURL)
+	shortURLRequestMap := make(map[string]model.BatchRequestURL)
 
 	// Creating shorten urls for each record in request
 	for _, originalURLRecord := range urlsToShorten {
@@ -70,7 +70,7 @@ func processMultipleURLRecords(ctx context.Context, env Env, urlsToShorten []mod
 		}
 		shortAddress := urltf.MakeResultShortenedURL(hostAndPathPart, encodedURL, req)
 
-		responseRecord := models.BatchResponseURL{
+		responseRecord := model.BatchResponseURL{
 			CorrelationID: originalURLRecord.CorrelationID,
 			ShortURL:      shortAddress,
 		}

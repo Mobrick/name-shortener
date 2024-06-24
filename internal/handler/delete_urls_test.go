@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/userauth"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -86,12 +86,48 @@ func BenchmarkDeleteUserUsrlsHandler(b *testing.B) {
 
 	request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	cookie, err := auth.CreateNewCookie(uuid.New().String())
 	if err != nil {
 		return
 	}
 	request.AddCookie(&cookie)
 	for i := 0; i < b.N; i++ {
 		env.DeleteUserUsrlsHandler(w, request)
+	}
+}
+
+func Test_parseRequestBody(t *testing.T) {
+	tests := []struct {
+		name      string
+		bodySlice []string
+		want      []string
+		wantErr   bool
+	}{
+		{
+			name: "positive parse test #1",
+			bodySlice: []string{
+				"6qxTVvsy", "RTfd56hn", "Jlfd67ds",
+			},
+			want: []string{
+				"6qxTVvsy", "RTfd56hn", "Jlfd67ds",
+			},
+			wantErr: false,
+		},
+		{
+			name:      "positive parse test #2",
+			bodySlice: []string{},
+			want:      []string{},
+			wantErr:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.bodySlice)
+			require.NoError(t, err)
+			request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", bytes.NewReader(body))
+			got, err := parseRequestBody(request)
+			assert.ElementsMatch(t, tt.want, got)
+			assert.Equal(t, tt.wantErr, err != nil)
+		})
 	}
 }

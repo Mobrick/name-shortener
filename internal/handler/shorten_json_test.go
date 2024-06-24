@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Mobrick/name-shortener/internal/auth"
 	"github.com/Mobrick/name-shortener/internal/config"
 	"github.com/Mobrick/name-shortener/internal/mocks"
-	"github.com/Mobrick/name-shortener/internal/models"
-	"github.com/Mobrick/name-shortener/internal/userauth"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,12 +29,12 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		body models.Request
+		body model.Request
 		want want
 	}{
 		{
 			name: "positive shorten test #1",
-			body: models.Request{
+			body: model.Request{
 				URL: "https://www.google.com/",
 			},
 			want: want{
@@ -44,7 +44,7 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 		},
 		{
 			name: "empty shorten test #1",
-			body: models.Request{
+			body: model.Request{
 				URL: "",
 			},
 			want: want{
@@ -54,7 +54,7 @@ func TestEnv_LongURLFromJSONHandle(t *testing.T) {
 		},
 		{
 			name: "conflict shorten test #1",
-			body: models.Request{
+			body: model.Request{
 				URL: "https://www.go.com/",
 			},
 			want: want{
@@ -89,7 +89,7 @@ func BenchmarkLongURLFromJSONHandle(b *testing.B) {
 		Storage:      mocks.NewMockDB(),
 		ConfigStruct: config.MakeConfig(),
 	}
-	bodyObject := models.Request{
+	bodyObject := model.Request{
 		URL: "https://www.google.com/",
 	}
 	body, err := json.Marshal(bodyObject)
@@ -98,7 +98,7 @@ func BenchmarkLongURLFromJSONHandle(b *testing.B) {
 	}
 	request := httptest.NewRequest(http.MethodPost, "/api/shorten", bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	cookie, err := userauth.CreateNewCookie(uuid.New().String())
+	cookie, err := auth.CreateNewCookie(uuid.New().String())
 	if err != nil {
 		log.Fatal(err.Error())
 	}

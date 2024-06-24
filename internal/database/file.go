@@ -8,14 +8,14 @@ import (
 	"slices"
 
 	"github.com/Mobrick/name-shortener/internal/filestorage"
-	"github.com/Mobrick/name-shortener/internal/models"
+	"github.com/Mobrick/name-shortener/internal/model"
 	"github.com/google/uuid"
 )
 
 // FileDB предствялет собой базу данных построенную по файлу при включении сервера.
 type FileDB struct {
 	DatabaseMap map[string]string
-	URLRecords  []models.URLRecord
+	URLRecords  []model.URLRecord
 	FileStorage *os.File
 }
 
@@ -25,7 +25,7 @@ func (dbData FileDB) PingDB() error {
 }
 
 // Get возвращает оригинальный URL.
-func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, error) {
+func (dbData FileDB) Get(_ context.Context, shortURL string) (string, bool, error) {
 	location, ok := dbData.DatabaseMap[shortURL]
 	if !ok {
 		return "", false, nil
@@ -34,7 +34,7 @@ func (dbData FileDB) Get(ctx context.Context, shortURL string) (string, bool, er
 }
 
 // Add добавляет данные о сокращенном URL в хранилище.
-func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL string, userID string) (string, error) {
+func (dbData *FileDB) Add(_ context.Context, shortURL string, originalURL string, userID string) (string, error) {
 	id := uuid.New().String()
 	newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, originalURL, shortURL, id, userID)
 
@@ -45,7 +45,7 @@ func (dbData *FileDB) Add(ctx context.Context, shortURL string, originalURL stri
 }
 
 // AddMany добавляет множество данных о сокращенных URL в хранилище.
-func (dbData *FileDB) AddMany(ctx context.Context, shortURLRequestMap map[string]models.BatchRequestURL, userID string) error {
+func (dbData *FileDB) AddMany(_ context.Context, shortURLRequestMap map[string]model.BatchRequestURL, userID string) error {
 	for shortURL, record := range shortURLRequestMap {
 		newRecord := CreateRecordAndUpdateDBMap(dbData.DatabaseMap, record.OriginalURL, shortURL, record.CorrelationID, userID)
 		dbData.URLRecords = append(dbData.URLRecords, newRecord)
@@ -60,23 +60,24 @@ func (dbData FileDB) Close() {
 }
 
 // GetUrlsByUserID возвращает записи созданные пользователем.
-func (dbData FileDB) GetUrlsByUserID(ctx context.Context, userID string, hostAndPathPart string, req *http.Request) ([]models.SimpleURLRecord, error) {
+func (dbData FileDB) GetUrlsByUserID(_ context.Context, userID string, hostAndPathPart string, req *http.Request) ([]model.SimpleURLRecord, error) {
 	urlRecords := dbData.URLRecords
 	usersUrls := GetUrlsCreatedByUser(urlRecords, userID, hostAndPathPart, req)
 	return usersUrls, nil
 }
 
 // Delete удаляет данные о сокращенном URL из хранилища.
-func (dbData *FileDB) Delete(ctx context.Context, urlsToDelete []string, userID string) error {
-	var result []models.URLRecord
+func (dbData *FileDB) Delete(_ context.Context, urlsToDelete []string, userID string) error {
+	var result []model.URLRecord
 	for _, urlRecord := range dbData.URLRecords {
 		if urlRecord.UserID != userID {
+			result = append(result, urlRecord)
 			continue
 		}
 		if !slices.Contains(urlsToDelete, urlRecord.ShortURL) {
+			result = append(result, urlRecord)
 			continue
 		}
-		result = append(result, urlRecord)
 	}
 	dbData.URLRecords = result
 	return nil
