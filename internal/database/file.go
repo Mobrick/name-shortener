@@ -82,3 +82,13 @@ func (dbData *FileDB) Delete(_ context.Context, urlsToDelete []string, userID st
 	dbData.URLRecords = result
 	return nil
 }
+
+// GetStats возвращает число юзеров и урлов
+func (dbData *FileDB) GetStats(_ context.Context) (model.Stats, error) {
+	urlRecords := dbData.URLRecords
+	uniqueIDs := make(map[string]bool)
+	for _, record := range urlRecords {
+		uniqueIDs[record.UserID] = true
+	}
+	return model.Stats{Urls: len(urlRecords), Users: len(uniqueIDs)} ,nil
+}

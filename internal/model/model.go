@@ -46,3 +46,9 @@ type ConfigFromFile struct {
 	TrustedSubnet   string `json:"trusted_subnet"`
 	EnableHTTPS     bool   `json:"enable_https"`
 }
+
+// Stats модель для статиски по количеству пользователей и урлов
+type Stats struct {
+	Urls  int `json:"urls"`
+	Users int `json:"users"`
+}

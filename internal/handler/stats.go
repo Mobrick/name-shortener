@@ -44,29 +44,15 @@ func (env Env) StatsHandle(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusForbidden)
 	}
 
-
-	userID, ok := GetUserIDFromRequest(req)
-	if !ok {
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	hostAndPathPart := env.ConfigStruct.FlagShortURLBaseAddr
-
 	// TODO: тут заменить на получение количества сокращенных URL
-	urls, err := env.Storage.GetUrlsByUserID(ctx, userID, hostAndPathPart, req)
+	stats, err := env.Storage.GetStats(ctx)
 	if err != nil {
-		logger.Log.Debug("could not get urls by user id")
+		logger.Log.Debug("could not get stats")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if len(urls) == 0 {
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	resp, err := json.Marshal(urls)
+	resp, err := json.Marshal(stats)
 	if err != nil {
 		logger.Log.Debug("could not marshal response")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
