@@ -90,5 +90,5 @@ func (dbData *FileDB) GetStats(_ context.Context) (model.Stats, error) {
 	for _, record := range urlRecords {
 		uniqueIDs[record.UserID] = true
 	}
-	return model.Stats{Urls: len(urlRecords), Users: len(uniqueIDs)} ,nil
+	return model.Stats{Urls: len(urlRecords), Users: len(uniqueIDs)}, nil
 }

@@ -211,6 +211,6 @@ func (dbData PostgreDB) GetStats(ctx context.Context) (model.Stats, error) {
 	if err != nil {
 		return model.Stats{}, err
 	}
-	
+
 	return model.Stats{Urls: rowCount, Users: uniqueUserCount}, nil
 }

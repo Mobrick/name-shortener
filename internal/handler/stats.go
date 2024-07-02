@@ -35,11 +35,11 @@ func (env Env) StatsHandle(res http.ResponseWriter, req *http.Request) {
 	}
 
 	subnet := net.IPNet{
-		IP: subnetIP,
+		IP:   subnetIP,
 		Mask: net.CIDRMask(24, 32),
 	}
 
-	if !subnet.Contains(ip) {		
+	if !subnet.Contains(ip) {
 		logger.Log.Debug("ip is not in the subnet")
 		res.WriteHeader(http.StatusForbidden)
 	}
