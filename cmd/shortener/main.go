@@ -50,7 +50,6 @@ func main() {
 		ConfigStruct: cfg,
 		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
-	// Добавить Close в интерфейс и закрвать через интерфейс
 	defer env.Storage.Close()
 
 	r := chi.NewRouter()
