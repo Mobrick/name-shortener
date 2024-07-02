@@ -194,3 +194,23 @@ func deletionRecepient(ctx context.Context, dbConnection *sql.DB, urlsToDelete [
 	}
 	return nil
 }
+
+// GetStats возвращает число юзеров и урлов
+func (dbData PostgreDB) GetStats(ctx context.Context) (model.Stats, error) {
+	db := dbData.DatabaseConnection
+
+	var rowCount int
+	var uniqueUserCount int
+
+	err := db.QueryRow("SELECT COUNT(*) FROM url_records").Scan(&rowCount)
+	if err != nil {
+		return model.Stats{}, err
+	}
+
+	err = db.QueryRow("SELECT COUNT(DISTINCT user_id) FROM url_records").Scan(&uniqueUserCount)
+	if err != nil {
+		return model.Stats{}, err
+	}
+
+	return model.Stats{Urls: rowCount, Users: uniqueUserCount}, nil
+}

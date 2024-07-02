@@ -36,6 +36,8 @@ type Storage interface {
 
 	// PingDB пингует подключение к бд.
 	PingDB() error
+
+	GetStats(context.Context) (model.Stats, error)
 }
 
 // NewDB создает объект хранилища в зависимости от того, чем заполнены флаги.

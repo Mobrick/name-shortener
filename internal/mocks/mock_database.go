@@ -69,3 +69,8 @@ func (dbData MockDB) GetUrlsByUserID(_ context.Context, userID string, _ string,
 func (dbData MockDB) PingDB() error {
 	return errors.New("no connection to database")
 }
+
+// GetStats возвращает число юзеров и урлов
+func (dbData MockDB) GetStats(_ context.Context) (model.Stats, error) {
+	return model.Stats{}, nil
+}

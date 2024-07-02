@@ -50,7 +50,6 @@ func main() {
 		ConfigStruct: cfg,
 		Storage:      database.NewDB(cfg.FlagFileStoragePath, cfg.FlagDBConnectionAddress),
 	}
-	// Добавить Close в интерфейс и закрвать через интерфейс
 	defer env.Storage.Close()
 
 	r := chi.NewRouter()
@@ -63,6 +62,7 @@ func main() {
 	r.Get(`/{shortURL}`, env.ShortenedURLHandle)
 	r.Get(`/ping`, env.PingDBHandle)
 	r.Get(`/api/user/urls`, env.UserUrlsHandler)
+	r.Get(`/api/internal/stats`, env.StatsHandle)
 
 	r.Post(`/`, env.LongURLHandle)
 	r.Post(`/api/shorten`, env.LongURLFromJSONHandle)

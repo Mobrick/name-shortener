@@ -18,6 +18,7 @@ type Config struct {
 	FlagFileStoragePath     string // путь к файлу с сохраненными URL
 	FlagDBConnectionAddress string // строка подключения к БД
 	FlagEnableHTTPS         bool   // использовать ли HTTPS
+	FlagTrustedSubnet       string // строковое представление беклассовой адресации
 
 	CertFilepath string // Путь к сертификату
 	KeyFilepath  string // Путь к ключу
@@ -28,7 +29,7 @@ func MakeConfig() *Config {
 	config := &Config{}
 
 	if flag.Lookup("c") == nil {
-		flag.StringVar(&config.FlagRunAddr, "c", "", "configuration file name")
+		flag.StringVar(&config.FlagConfigFile, "c", "", "configuration file name")
 	}
 	if flag.Lookup("a") == nil {
 		flag.StringVar(&config.FlagRunAddr, "a", ":8080", "address to run server")
@@ -44,6 +45,9 @@ func MakeConfig() *Config {
 	}
 	if flag.Lookup("d") == nil {
 		flag.StringVar(&config.FlagDBConnectionAddress, "d", "", "database connection address")
+	}
+	if flag.Lookup("t") == nil {
+		flag.StringVar(&config.FlagTrustedSubnet, "t", "", "database connection address")
 	}
 	if flag.Lookup("s") == nil {
 		flag.BoolVar(&config.FlagEnableHTTPS, "s", false, "database connection address")
@@ -75,6 +79,10 @@ func MakeConfig() *Config {
 		config.FlagDBConnectionAddress = envDBConnectionAddress
 	}
 
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubnet != "" {
+		config.FlagTrustedSubnet = envTrustedSubnet
+	}
+
 	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS != "" {
 		config.FlagEnableHTTPS = true
 	}
@@ -102,6 +110,10 @@ func MakeConfig() *Config {
 
 		if config.FlagDBConnectionAddress == "" {
 			config.FlagDBConnectionAddress = configFromFile.DatabaseDsn
+		}
+
+		if config.FlagTrustedSubnet == "" {
+			config.FlagTrustedSubnet = configFromFile.TrustedSubnet
 		}
 
 		if !config.FlagEnableHTTPS {
